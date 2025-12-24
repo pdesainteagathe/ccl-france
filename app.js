@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (param === 'redistributionPercent') {
                 display.textContent = `Revenu ${val}% / Sub. ${100 - val}%`;
             } else if (param === 'carbonPrice') {
-                display.textContent = val + ' €/tCO2eq';
+                display.innerHTML = `${val} <span class="unit">€/tCO2eq</span>`;
             } else {
                 display.textContent = val + '%';
             }
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (param === 'redistributionPercent') {
             display.textContent = `Revenu ${slider.value}% / Sub. ${100 - slider.value}%`;
         } else if (param === 'carbonPrice') {
-            display.textContent = slider.value + ' €/tCO2eq';
+            display.innerHTML = `${slider.value} <span class="unit">€/tCO2eq</span>`;
         } else {
             display.textContent = slider.value + '%';
         }

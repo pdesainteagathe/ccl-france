@@ -332,6 +332,7 @@ body {
     height: fit-content;
     position: sticky;
     top: 100px;
+    z-index: 100;
 }
 
 .right-sidebar {
@@ -428,15 +429,22 @@ body {
     color: var(--color-text-secondary);
 }
 
+.slider-label>span {
+    display: inline;
+    white-space: nowrap;
+}
+
 .slider-value {
     background: var(--color-yellow-highlight);
     border: 1px solid var(--color-yellow-border);
-    padding: var(--spacing-xs) var(--spacing-md);
+    padding: 6px 10px;
     border-radius: var(--radius-full);
     font-weight: 600;
     color: var(--color-text-primary);
-    min-width: 60px;
+    min-width: 110px;
     text-align: center;
+    white-space: nowrap;
+    font-size: 0.9em;
 }
 
 /* Pourcentages de part et d'autre du slider */
@@ -457,11 +465,19 @@ body {
     color: var(--color-success);
 }
 
+/* Unités dans les valeurs de slider */
+.unit {
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+    font-weight: normal;
+}
+
 /* Icône d'aide avec tooltip */
 .help-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 18px;
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -472,6 +488,7 @@ body {
     cursor: help;
     position: relative;
     margin-left: 6px;
+    z-index: 10000;
 }
 
 .help-icon:hover::after {
@@ -491,7 +508,7 @@ body {
     text-align: left;
     line-height: 1.6;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+    z-index: 99999;
 }
 
 .help-icon:hover::before {
@@ -502,7 +519,7 @@ body {
     transform: none;
     border: 6px solid transparent;
     border-top-color: rgba(44, 62, 80, 0.98);
-    z-index: 1000;
+    z-index: 10000;
 }
 
 .slider {
@@ -772,6 +789,7 @@ body {
     height: 400px;
     margin-bottom: var(--spacing-lg);
     position: relative;
+    z-index: 1;
 }
 
 #mainChart {
