@@ -209,32 +209,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const slider = document.getElementById(id);
         const display = document.getElementById(valueId);
 
-        if (!slider || !display) return;
+        if (!slider) return;
 
         const updateValue = () => {
             const val = parseInt(slider.value);
             state[param] = val;
 
-            if (param === 'redistributionPercent') {
-                display.textContent = `Revenu ${val}% / Sub. ${100 - val}%`;
-            } else if (param === 'carbonPrice') {
-                display.innerHTML = `${val} <span class="unit">€/tCO2eq</span>`;
-            } else {
-                display.textContent = val + '%';
+            if (display) {
+                if (param === 'redistributionPercent') {
+                    display.textContent = `Revenu ${val}% / Sub. ${100 - val}%`;
+                } else if (param === 'carbonPrice') {
+                    display.innerHTML = `${val} <span class="unit">€/tCO2eq</span>`;
+                } else {
+                    display.textContent = val + '%';
+                }
             }
             updateAll();
         };
 
         slider.addEventListener('input', updateValue);
         // Initial set logic
-        if (param === 'redistributionPercent') {
-            display.textContent = `Revenu ${slider.value}% / Sub. ${100 - slider.value}%`;
-        } else if (param === 'carbonPrice') {
-            display.innerHTML = `${slider.value} <span class="unit">€/tCO2eq</span>`;
-        } else {
-            display.textContent = slider.value + '%';
+        if (display) {
+            if (param === 'redistributionPercent') {
+                display.textContent = `Revenu ${slider.value}% / Sub. ${100 - slider.value}%`;
+            } else if (param === 'carbonPrice') {
+                display.innerHTML = `${slider.value} <span class="unit">€/tCO2eq</span>`;
+            } else {
+                display.textContent = slider.value + '%';
+            }
         }
     };
+
 
     // ===== SUBSIDIES MANAGEMENT =====
     const initSubsidiesUI = () => {
