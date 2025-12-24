@@ -235,7 +235,7 @@ body {
 /* ===== GRID LAYOUT ===== */
 .content-grid {
     display: grid;
-    grid-template-columns: 320px 1fr 280px;
+    grid-template-columns: 320px 1fr;
     gap: var(--spacing-xl);
 }
 
@@ -330,6 +330,7 @@ body {
     background: var(--color-border-light);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
     position: relative;
     cursor: pointer;
 }
@@ -674,18 +675,19 @@ input:checked+.toggle-slider:before {
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1400px) {
     .content-grid {
-        grid-template-columns: 280px 1fr 260px;
+        grid-template-columns: 280px 1fr;
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 992px) {
     .content-grid {
         grid-template-columns: 1fr;
     }
 
-    .sidebar,
-    .right-sidebar {
+    .sidebar {
         position: static;
+        width: 100%;
+        margin-bottom: var(--spacing-lg);
     }
 }
 

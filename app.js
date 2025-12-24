@@ -1,355 +1,200 @@
-// ===== DATA GENERATION =====
-const generateChartData = (redistributionPercent, compensationMeasure) => {
-    const incomeGroups = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    
-    // Base costs without compensation (decreasing as income increases - regressive tax)
-    const baseCosts = [3.5, 3.3, 3.1, 2.9, 2.7, 2.5, 2.3, 2.1, 1.9, 1.7];
-    
-    // Calculate compensation based on measure type
-    const getCompensation = (index, measure) => {
-        const redistributionFactor = redistributionPercent / 100;
-        
-        switch(measure) {
-            case 'equal-capita':
-                // Equal per capita - same for everyone
-                return 1.8 * redistributionFactor;
-            
-            case 'equal-household':
-                // Equal per household - slightly varies
-                return (1.6 + Math.random() * 0.4) * redistributionFactor;
-            
-            case 'electricity':
-                // Electricity subsidy - benefits lower income more
-                return (2.2 - index * 0.15) * redistributionFactor;
-            
-            case 'exempting':
-                // Exempting electricity - proportional to usage
-                return (1.5 + index * 0.1) * redistributionFactor;
-            
-            case 'consumption':
-                // Reducing VAT - benefits higher spenders more
-                return (1.2 + index * 0.12) * redistributionFactor;
-            
-            default:
-                return 1.8 * redistributionFactor;
-        }
-    };
-    
-    const compensatedCosts = baseCosts.map((cost, index) => {
-        const compensation = getCompensation(index, compensationMeasure);
-        return Math.max(0, cost - compensation);
-    });
-    
-    return {
-        labels: incomeGroups,
-        noCompensation: baseCosts,
-        withCompensation: compensatedCosts
-    };
-};
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== DATA CONFIGURATION =====
+    const carbonPrice = 100; // €/tonne
+    const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
-// ===== CHART RENDERING =====
-let chartInstance = null;
+    // Emissions moyennes par décile (en tonnes CO2/an) - Croissantes
+    const baseEmissions = [3.2, 4.5, 5.8, 6.5, 7.8, 9.2, 10.5, 12.8, 15.2, 22.5];
 
-const renderChart = (data) => {
-    const canvas = document.getElementById('mainChart');
-    const ctx = canvas.getContext('2d');
-    
-    // Clear previous chart
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Set canvas size
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    
-    const width = rect.width;
-    const height = rect.height;
-    
-    // Chart dimensions
-    const padding = { top: 20, right: 20, bottom: 40, left: 50 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-    
-    // Find max value for scaling
-    const maxValue = Math.max(...data.noCompensation, ...data.withCompensation);
-    const yScale = chartHeight / (maxValue * 1.1);
-    
-    // Bar dimensions
-    const barGroupWidth = chartWidth / data.labels.length;
-    const barWidth = barGroupWidth * 0.35;
-    const barGap = barGroupWidth * 0.1;
-    
-    // Colors
-    const greenColor = '#7cb87c';
-    const purpleColor = '#9b8fb8';
-    const gridColor = '#e1e8ed';
-    const textColor = '#5a6c7d';
-    
-    // Draw grid lines
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) {
-        const y = padding.top + (chartHeight / 5) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding.left, y);
-        ctx.lineTo(padding.left + chartWidth, y);
-        ctx.stroke();
-        
-        // Y-axis labels
-        const value = (maxValue * 1.1 * (5 - i) / 5).toFixed(1);
-        ctx.fillStyle = textColor;
-        ctx.font = '11px Inter, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(value + '%', padding.left - 10, y + 4);
-    }
-    
-    // Draw bars with animation
-    data.labels.forEach((label, index) => {
-        const x = padding.left + index * barGroupWidth;
-        
-        // No compensation bar (green)
-        const noCompHeight = data.noCompensation[index] * yScale;
-        const noCompY = padding.top + chartHeight - noCompHeight;
-        
-        ctx.fillStyle = greenColor;
-        ctx.fillRect(x + barGap, noCompY, barWidth, noCompHeight);
-        
-        // With compensation bar (purple)
-        const compHeight = data.withCompensation[index] * yScale;
-        const compY = padding.top + chartHeight - compHeight;
-        
-        ctx.fillStyle = purpleColor;
-        ctx.fillRect(x + barGap + barWidth, compY, barWidth, compHeight);
-        
-        // X-axis labels
-        ctx.fillStyle = textColor;
-        ctx.font = '12px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(label, x + barGroupWidth / 2, height - padding.bottom + 20);
-    });
-    
-    // Add hover effects
-    canvas.onmousemove = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        
-        let hovering = false;
-        
-        data.labels.forEach((label, index) => {
-            const x = padding.left + index * barGroupWidth;
-            
-            // Check no compensation bar
-            const noCompHeight = data.noCompensation[index] * yScale;
-            const noCompY = padding.top + chartHeight - noCompHeight;
-            
-            if (mouseX >= x + barGap && mouseX <= x + barGap + barWidth &&
-                mouseY >= noCompY && mouseY <= noCompY + noCompHeight) {
-                hovering = true;
-            }
-            
-            // Check compensation bar
-            const compHeight = data.withCompensation[index] * yScale;
-            const compY = padding.top + chartHeight - compHeight;
-            
-            if (mouseX >= x + barGap + barWidth && mouseX <= x + barGap + barWidth * 2 &&
-                mouseY >= compY && mouseY <= compY + compHeight) {
-                hovering = true;
-            }
+    // ===== DATA GENERATION =====
+    const calculateData = (state) => {
+        // 1. Calcul de la taxe payée par décile
+        const taxPaid = baseEmissions.map(e => e * carbonPrice);
+        const totalCollected = taxPaid.reduce((a, b) => a + b, 0);
+
+        // 2. Montant total à redistribuer (Revenu Direct)
+        // state.redistributionPercent représente ici la part "Revenu Direct"
+        const totalToRedistribute = totalCollected * (state.redistributionPercent / 100);
+
+        // 3. Calcul des poids pour la redistribution (Revenu Direct)
+        // Pondération bas revenus (0% = égalitaire, 100% = très ciblé sur D1-D3)
+        let weights = deciles.map((_, i) => {
+            const decileNum = i + 1;
+            // Fonction qui donne plus de poids aux petits chiffres si ponderation > 0
+            return Math.pow(11 - decileNum, state.ponderationPercent / 25);
         });
-        
-        canvas.style.cursor = hovering ? 'pointer' : 'default';
+
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let redistribution = weights.map(w => (w / totalWeight) * totalToRedistribute);
+
+        // 4. Bonus Rural (ajoute un montant forfaitaire lié au paramètre)
+        // Note: Le bonus rural est ici financé par la part redistribuée ou les revenus globaux
+        const bonusAmount = (state.bonusPercent / 100) * (totalToRedistribute / 10);
+        redistribution = redistribution.map(r => r + bonusAmount);
+
+        // 5. Calcul du Net (Redistribution - Taxe)
+        // Pour correspondre à l'image "Transferts nets"
+        const netTransfer = redistribution.map((r, i) => r - taxPaid[i]);
+
+        return {
+            labels: deciles,
+            taxCost: taxPaid.map(v => -v), // Négatif pour le coût
+            netImpact: netTransfer
+        };
     };
-};
 
-// ===== STATE MANAGEMENT =====
-let appState = {
-    redistributionPercent: 70,
-    compensationMeasure: 'equal-capita',
-    displayMode: 'relative'
-};
+    // ===== CHART RENDERING (Pure Canvas) =====
+    const renderChart = (data) => {
+        const canvas = document.getElementById('mainChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
-const updateChart = () => {
-    const data = generateChartData(appState.redistributionPercent, appState.compensationMeasure);
-    renderChart(data);
-};
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
 
-// ===== EVENT LISTENERS =====
+        const width = rect.width;
+        const height = rect.height;
+        const padding = { top: 40, right: 30, bottom: 60, left: 60 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
 
-// Slider
-const slider = document.getElementById('redistributionSlider');
-const sliderValue = document.getElementById('sliderValue');
+        ctx.clearRect(0, 0, width, height);
 
-slider.addEventListener('input', (e) => {
-    const value = e.target.value;
-    appState.redistributionPercent = parseInt(value);
-    sliderValue.textContent = value + '%';
-    updateChart();
-});
+        // Trouver les min/max pour l'échelle (en €)
+        const allValues = [...data.taxCost, ...data.netImpact];
+        const maxValue = Math.max(...allValues, 1000);
+        const minValue = Math.min(...allValues, -2500);
+        const range = maxValue - minValue;
 
-// Compensation cards
-const compensationCards = document.querySelectorAll('.compensation-card');
+        const getY = (val) => padding.top + chartHeight - ((val - minValue) / range) * chartHeight;
+        const zeroY = getY(0);
 
-compensationCards.forEach(card => {
-    card.addEventListener('click', () => {
-        // Remove active class from all cards
-        compensationCards.forEach(c => c.classList.remove('active'));
-        
-        // Add active class to clicked card
-        card.classList.add('active');
-        
-        // Update state
-        appState.compensationMeasure = card.dataset.measure;
-        updateChart();
-    });
-});
+        // Draw Grid & Labels
+        ctx.strokeStyle = '#e1e8ed';
+        ctx.lineWidth = 1;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#5a6c7d';
+        ctx.font = '11px Inter, sans-serif';
 
-// Tab buttons
-const tabButtons = document.querySelectorAll('.tab-button');
-
-tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        button.classList.add('active');
-        
-        // In a real app, this would switch between different configuration panels
-        console.log('Switched to tab:', button.dataset.tab);
-    });
-});
-
-// Detail buttons
-const detailButtons = document.querySelectorAll('.detail-button');
-
-detailButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        detailButtons.forEach(b => b.classList.remove('active'));
-        button.classList.add('active');
-        
-        // In a real app, this would change the chart visualization type
-        console.log('Switched to detail level:', button.textContent.trim());
-    });
-});
-
-// Display toggle
-const displayToggle = document.getElementById('displayToggle');
-
-displayToggle.addEventListener('change', (e) => {
-    appState.displayMode = e.target.checked ? 'absolute' : 'relative';
-    
-    // In a real app, this would convert the chart values
-    console.log('Display mode:', appState.displayMode);
-});
-
-// Download button
-const downloadBtn = document.getElementById('downloadBtn');
-
-downloadBtn.addEventListener('click', () => {
-    const canvas = document.getElementById('mainChart');
-    const link = document.createElement('a');
-    link.download = 'carbon-pricing-chart.png';
-    link.href = canvas.toDataURL();
-    link.click();
-    
-    // Also generate CSV data
-    const data = generateChartData(appState.redistributionPercent, appState.compensationMeasure);
-    let csv = 'Income Group,No Compensation (%),With Compensation (%)\n';
-    data.labels.forEach((label, index) => {
-        csv += `${label},${data.noCompensation[index]},${data.withCompensation[index]}\n`;
-    });
-    
-    const csvBlob = new Blob([csv], { type: 'text/csv' });
-    const csvLink = document.createElement('a');
-    csvLink.download = 'carbon-pricing-data.csv';
-    csvLink.href = URL.createObjectURL(csvBlob);
-    csvLink.click();
-    
-    console.log('Downloaded chart and data');
-});
-
-// Share button
-const shareBtn = document.getElementById('shareBtn');
-
-shareBtn.addEventListener('click', () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('redistribution', appState.redistributionPercent);
-    url.searchParams.set('measure', appState.compensationMeasure);
-    
-    navigator.clipboard.writeText(url.toString()).then(() => {
-        // Visual feedback
-        const originalText = shareBtn.innerHTML;
-        shareBtn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13 4L6 11L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            Copied to clipboard!
-        `;
-        shareBtn.style.color = '#7cb87c';
-        
-        setTimeout(() => {
-            shareBtn.innerHTML = originalText;
-            shareBtn.style.color = '';
-        }, 2000);
-    });
-});
-
-// Country selector
-const countrySelector = document.getElementById('countrySelector');
-
-countrySelector.addEventListener('click', () => {
-    // In a real app, this would open a modal with country options
-    alert('Country selection would open here. Available countries: France, Germany, UK, USA, etc.');
-});
-
-// Info icons
-document.querySelectorAll('.info-icon, .info-icon-small').forEach(icon => {
-    icon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // In a real app, this would show a tooltip or modal with more information
-        alert('More information about this option would appear here.');
-    });
-});
-
-// ===== INITIALIZATION =====
-
-// Load state from URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('redistribution')) {
-    appState.redistributionPercent = parseInt(urlParams.get('redistribution'));
-    slider.value = appState.redistributionPercent;
-    sliderValue.textContent = appState.redistributionPercent + '%';
-}
-if (urlParams.has('measure')) {
-    appState.compensationMeasure = urlParams.get('measure');
-    compensationCards.forEach(card => {
-        if (card.dataset.measure === appState.compensationMeasure) {
-            compensationCards.forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
+        const step = 500;
+        for (let v = Math.floor(minValue / step) * step; v <= maxValue; v += step) {
+            const y = getY(v);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(padding.left + chartWidth, y);
+            ctx.stroke();
+            ctx.fillText(v + ' €', padding.left - 10, y + 4);
         }
-    });
-}
 
-// Initial chart render
-updateChart();
+        // Draw Zero Line
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, zeroY);
+        ctx.lineTo(padding.left + chartWidth, zeroY);
+        ctx.stroke();
 
-// Handle window resize
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(updateChart, 250);
-});
+        // Draw Bars
+        const barWidth = (chartWidth / 10) * 0.7;
+        const groupWidth = chartWidth / 10;
 
-// Add smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
+        data.labels.forEach((label, i) => {
+            const x = padding.left + i * groupWidth + (groupWidth - barWidth) / 2;
+
+            // 1. Bar Coût de la taxe (gris clair / hachuré ou transparent)
+            const taxY = getY(data.taxCost[i]);
+            ctx.fillStyle = 'rgba(124, 184, 124, 0.2)'; // Vert très clair pour le coût payé
+            ctx.fillRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
+            ctx.strokeStyle = '#7cb87c';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
+
+            // 2. Bar Impact Net (Bleu comme sur l'image)
+            const netY = getY(data.netImpact[i]);
+            ctx.fillStyle = data.netImpact[i] >= 0 ? '#9b8fb8' : '#e74c3c'; // Violet si positif, rouge si négatif
+            ctx.fillRect(x, Math.min(zeroY, netY), barWidth, Math.abs(netY - zeroY));
+
+            // Labels Déciles
+            ctx.fillStyle = '#2c3e50';
+            ctx.textAlign = 'center';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.fillText('D' + label, x + barWidth / 2, height - padding.bottom + 25);
+        });
+
+        // X-axis title
+        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
+    };
+
+    // ===== STATE & UPDATES =====
+    let state = {
+        redistributionPercent: 70,
+        ponderationPercent: 0,
+        bonusPercent: 0
+    };
+
+    const updateAll = () => {
+        const data = calculateData(state);
+        renderChart(data);
+    };
+
+    // ===== SLIDERS SETUP =====
+    const setupSlider = (id, valueId, param) => {
+        const slider = document.getElementById(id);
+        const display = document.getElementById(valueId);
+
+        if (!slider || !display) {
+            console.error('Missing element:', id, valueId);
+            return;
         }
-    });
-});
 
-console.log('Carbon Pricing Incidence Calculator initialized');
-console.log('Current state:', appState);
+        const updateValue = () => {
+            const val = slider.value;
+            state[param] = parseInt(val);
+
+            if (param === 'redistributionPercent') {
+                display.textContent = `Revenu ${val}% / Sub. ${100 - val}%`;
+            } else if (param === 'bonusPercent') {
+                display.textContent = '+' + val + '%';
+            } else {
+                display.textContent = val + '%';
+            }
+            updateAll();
+        };
+
+        slider.addEventListener('input', updateValue);
+        // Initial set
+        if (param === 'redistributionPercent') {
+            display.textContent = `Revenu ${slider.value}% / Sub. ${100 - slider.value}%`;
+        } else if (param === 'bonusPercent') {
+            display.textContent = '+' + slider.value + '%';
+        } else {
+            display.textContent = slider.value + '%';
+        }
+    };
+
+    setupSlider('redistributionSlider', 'redistributionValue', 'redistributionPercent');
+    setupSlider('ponderationSlider', 'ponderationValue', 'ponderationPercent');
+    setupSlider('bonusSlider', 'bonusValue', 'bonusPercent');
+
+    // Initial Render
+    updateAll();
+
+    // Resize handling
+    window.addEventListener('resize', () => {
+        updateAll();
+    });
+
+    // Download/Share (Simplified)
+    document.getElementById('downloadBtn')?.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'taxe-carbone-impact.png';
+        link.href = document.getElementById('mainChart').toDataURL();
+        link.click();
+    });
+
+    console.log('Calculateur initialisé avec succès');
+});

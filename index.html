@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculateur d'Incidence de la Tarification Carbone - Analyse d'Impact Distributif</title>
+    <title>Taxons le carbone, partageons les recettes !</title>
     <meta name="description"
         content="Analysez l'impact distributif de la tarification carbone à travers les groupes de revenus avec des mesures de compensation interactives et des visualisations détaillées.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@
                 <div class="header-logo">
                     <img src="logo-revenu-carbone.svg" alt="Logo Revenu Carbone" class="logo-image">
                 </div>
-                <h1 class="header-title">Calculateur d'Incidence de la Tarification Carbone</h1>
+                <h1 class="header-title">Taxons le carbone, partageons les recettes !</h1>
             </div>
             <nav class="header-nav">
                 <a href="#methodology" class="nav-link">Méthodologie</a>
@@ -31,13 +31,7 @@
 
     <main class="main-content">
         <div class="page-title">
-            <h2>Impact distributif de la tarification carbone en <span class="country-flag">🇫🇷</span> France</h2>
-            <button class="country-selector" id="countrySelector">
-                <span>France</span>
-                <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                    <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-            </button>
+            <h2>Vote pour ta forme de redistribution préférée de la taxe carbone</h2>
         </div>
 
         <div class="content-grid">
@@ -45,67 +39,32 @@
                 <div class="config-section">
                     <h3 class="section-title">Configurez votre analyse</h3>
 
-                    <div class="config-tabs">
-                        <button class="tab-button active" data-tab="population">Population</button>
-                        <button class="tab-button" data-tab="carbon-price">Prix du Carbone</button>
-                        <button class="tab-button" data-tab="compensation">Compensation</button>
-                    </div>
-
                     <div class="config-content">
-                        <div class="config-description">
-                            Définissez quelle part des revenus générés par la tarification carbone doit être
-                            redistribuée à la population
+                        <div class="slider-control">
+                            <div class="slider-label">
+                                <span>Part revenu carbone / subventions</span>
+                                <span class="slider-value" id="redistributionValue">Revenu 70% / Sub. 30%</span>
+                            </div>
+                            <input type="range" class="slider" id="redistributionSlider" min="0" max="100" value="70">
+                            <div class="slider-track-fill" id="redistributionTrackFill"></div>
                         </div>
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Redistribution des revenus</span>
-                                <span class="slider-value" id="sliderValue">70%</span>
+                                <span>Pondération bas revenus</span>
+                                <span class="slider-value" id="ponderationValue">0%</span>
                             </div>
-                            <input type="range" class="slider" id="redistributionSlider" min="0" max="100" value="70">
-                            <div class="slider-track-fill" id="sliderTrackFill"></div>
+                            <input type="range" class="slider" id="ponderationSlider" min="0" max="100" value="0">
+                            <div class="slider-track-fill" id="ponderationTrackFill"></div>
                         </div>
 
-                        <div class="compensation-section">
-                            <h4 class="subsection-title">Sélectionnez une mesure de compensation</h4>
-
-                            <div class="compensation-options">
-                                <button class="compensation-card active" data-measure="equal-capita">
-                                    <div class="card-header">
-                                        <span class="card-title">Transfert égal par habitant (forfaitaire)</span>
-                                        <span class="info-icon">?</span>
-                                    </div>
-                                </button>
-
-                                <button class="compensation-card" data-measure="equal-household">
-                                    <div class="card-header">
-                                        <span class="card-title">Transfert égal par ménage (forfaitaire)</span>
-                                        <span class="info-icon">?</span>
-                                    </div>
-                                </button>
-
-                                <button class="compensation-card" data-measure="electricity">
-                                    <div class="card-header">
-                                        <span class="card-title">Subvention du prix de l'électricité</span>
-                                        <span class="info-icon">?</span>
-                                    </div>
-                                </button>
-
-                                <button class="compensation-card" data-measure="exempting">
-                                    <div class="card-header">
-                                        <span class="card-title">Exemption de l'électricité de la tarification
-                                            carbone</span>
-                                        <span class="info-icon">?</span>
-                                    </div>
-                                </button>
-
-                                <button class="compensation-card" data-measure="consumption">
-                                    <div class="card-header">
-                                        <span class="card-title">Réduction des taxes à la consommation (ex: TVA)</span>
-                                        <span class="info-icon">?</span>
-                                    </div>
-                                </button>
+                        <div class="slider-control">
+                            <div class="slider-label">
+                                <span>Bonus rural</span>
+                                <span class="slider-value" id="bonusValue">+0%</span>
                             </div>
+                            <input type="range" class="slider" id="bonusSlider" min="0" max="200" value="0">
+                            <div class="slider-track-fill" id="bonusTrackFill"></div>
                         </div>
                     </div>
                 </div>
@@ -132,16 +91,17 @@
 
                 <div class="legend">
                     <div class="legend-item">
-                        <span class="legend-color" style="background: #7cb87c;"></span>
-                        <span>sans compensation</span>
+                        <span class="legend-color"
+                            style="background: rgba(124, 184, 124, 0.4); border: 1px solid #7cb87c;"></span>
+                        <span>Coût de la taxe carbone</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-color" style="background: #9b8fb8;"></span>
-                        <span>avec compensation</span>
+                        <span>Transfert Net (Taxe + Redistribution)</span>
                     </div>
                 </div>
 
-                <div class="chart-label">Coût relatif en %</div>
+                <div class="chart-label">Impact annuel par ménage (en €)</div>
 
                 <div class="chart-container">
                     <canvas id="mainChart"></canvas>
@@ -156,49 +116,11 @@
                 </div>
             </section>
 
-            <aside class="right-sidebar">
-                <div class="detail-section">
-                    <h3 class="section-title">Niveau de détail analytique</h3>
 
-                    <div class="detail-buttons">
-                        <button class="detail-button active">Moyennes</button>
-                        <button class="detail-button">
-                            Boîte à moustaches
-                            <span class="info-icon-small">?</span>
-                        </button>
-                        <button class="detail-button">Distribution</button>
-                    </div>
-                </div>
-
-                <div class="display-section">
-                    <h3 class="section-title">Afficher les valeurs en</h3>
-
-                    <div class="toggle-container">
-                        <div class="toggle-option">
-                            <span>relatif (% des dépenses du ménage)</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="displayToggle">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <div class="toggle-option">
-                            <span>absolu (coût en € pour le ménage)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="explanation-section">
-                    <h3 class="section-title">Explication du graphique</h3>
-                    <p class="explanation-text">
-                        Les graphiques montrent les coûts supplémentaires pour les ménages en <strong>France</strong>
-                        résultant de la tarification carbone à travers différents groupes de revenus.
-                    </p>
-                </div>
-            </aside>
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3"></script>
 </body>
 
 </html>
