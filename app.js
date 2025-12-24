@@ -1,15 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ===== DATA CONFIGURATION =====
-    const carbonPrice = 100; // €/tonne
     const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
-    // Emissions moyennes par décile (en tonnes CO2/an) - Croissantes
-    const baseEmissions = [3.2, 4.5, 5.8, 6.5, 7.8, 9.2, 10.5, 12.8, 15.2, 22.5];
+    // Emissions moyennes par décile (en tonnes CO2/an) - Source: Pottier et al. (2020)
+    const baseEmissions = [14.6, 16.8, 17.7, 19.5, 21.2, 22.8, 23.5, 24.8, 25.9, 28.4];
+
+    // ===== SUBSIDIES CONFIGURATION =====
+    const subsidiesNames = [
+        "Pompe à chaleur",
+        "Voiture électrique",
+        "Vélo électrique",
+        "Trains (Intercités/TER)",
+        "Rénovation thermique",
+        "Énergies renouvelables",
+        "Car express régionaux",
+        "Fret ferroviaire",
+        "Bornes de recharge",
+        "Agriculture durable",
+        "Industrie décarbonée",
+        "Autres"
+    ];
+
+    // ===== STATE & UPDATES =====
+    let state = {
+        carbonPrice: 100,
+        redistributionPercent: 100,
+        ponderationPercent: 0,
+        bonusPercent: 0,
+        subsidies: subsidiesNames.map((name, i) => ({
+            id: `sub_${i}`,
+            name: name,
+            percent: Math.round(100 / subsidiesNames.length)
+        }))
+    };
+
+    // Ensure initial sum is exactly 100
+    const currentSum = state.subsidies.reduce((a, b) => a + b.percent, 0);
+    if (currentSum !== 100) {
+        state.subsidies[0].percent += (100 - currentSum);
+    }
 
     // ===== DATA GENERATION =====
     const calculateData = (state) => {
         // 1. Calcul de la taxe payée par décile
-        const taxPaid = baseEmissions.map(e => e * carbonPrice);
+        const taxPaid = baseEmissions.map(e => e * state.carbonPrice);
         const totalCollected = taxPaid.reduce((a, b) => a + b, 0);
 
         // 2. Montant total à redistribuer (Revenu Direct)
@@ -17,33 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalToRedistribute = totalCollected * (state.redistributionPercent / 100);
 
         // 3. Calcul des poids pour la redistribution (Revenu Direct)
-        // Pondération bas revenus (0% = égalitaire, 100% = très ciblé sur D1-D3)
+        // Coeff de ruralité : décroissant par décile (hyp: plus rural en bas de l'échelle)
+        const ruralityScores = [1.3, 1.2, 1.1, 1.05, 1.0, 0.95, 0.9, 0.85, 0.8, 0.75];
+
         let weights = deciles.map((_, i) => {
             const decileNum = i + 1;
-            // Fonction qui donne plus de poids aux petits chiffres si ponderation > 0
-            return Math.pow(11 - decileNum, state.ponderationPercent / 25);
+            // Poids de base (1) modulé par la pondération bas revenus (puissance)
+            let w = Math.pow(11 - decileNum, state.ponderationPercent / 25);
+
+            // Modulation par le bonus rural (linéaire et moins prononcé que la pondération)
+            const rFactor = 1 + (ruralityScores[i] - 1) * (state.bonusPercent / 100);
+            return w * rFactor;
         });
 
         const totalWeight = weights.reduce((a, b) => a + b, 0);
         let redistribution = weights.map(w => (w / totalWeight) * totalToRedistribute);
 
-        // 4. Bonus Rural (ajoute un montant forfaitaire lié au paramètre)
-        // Note: Le bonus rural est ici financé par la part redistribuée ou les revenus globaux
-        const bonusAmount = (state.bonusPercent / 100) * (totalToRedistribute / 10);
-        redistribution = redistribution.map(r => r + bonusAmount);
-
-        // 5. Calcul du Net (Redistribution - Taxe)
-        // Pour correspondre à l'image "Transferts nets"
+        // 4. Calcul du Net (Redistribution - Taxe)
         const netTransfer = redistribution.map((r, i) => r - taxPaid[i]);
 
         return {
             labels: deciles,
-            taxCost: taxPaid.map(v => -v), // Négatif pour le coût
+            taxCost: taxPaid.map(v => -v),
             netImpact: netTransfer
         };
     };
 
-    // ===== CHART RENDERING (Pure Canvas) =====
+    // ===== CHART RENDERING =====
     const renderChart = (data) => {
         const canvas = document.getElementById('mainChart');
         if (!canvas) return;
@@ -63,16 +97,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, width, height);
 
-        // Trouver les min/max pour l'échelle (en €)
+        // Finding min/max for scale
         const allValues = [...data.taxCost, ...data.netImpact];
-        const maxValue = Math.max(...allValues, 1000);
-        const minValue = Math.min(...allValues, -2500);
+        let maxValue = Math.max(...allValues, 100);
+        let minValue = Math.min(...allValues, -100);
+        const margin = (maxValue - minValue) * 0.15;
+        maxValue += margin;
+        minValue -= margin;
         const range = maxValue - minValue;
 
         const getY = (val) => padding.top + chartHeight - ((val - minValue) / range) * chartHeight;
         const zeroY = getY(0);
 
-        // Draw Grid & Labels
+        // Draw Grid
         ctx.strokeStyle = '#e1e8ed';
         ctx.lineWidth = 1;
         ctx.textAlign = 'right';
@@ -89,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillText(v + ' €', padding.left - 10, y + 4);
         }
 
-        // Draw Zero Line
+        // Zero Line
         ctx.strokeStyle = '#2c3e50';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -104,41 +141,64 @@ document.addEventListener('DOMContentLoaded', () => {
         data.labels.forEach((label, i) => {
             const x = padding.left + i * groupWidth + (groupWidth - barWidth) / 2;
 
-            // 1. Bar Coût de la taxe (gris clair / hachuré ou transparent)
             const taxY = getY(data.taxCost[i]);
-            ctx.fillStyle = 'rgba(124, 184, 124, 0.2)'; // Vert très clair pour le coût payé
+            ctx.fillStyle = 'rgba(74, 144, 226, 0.25)'; // Bleu clair
             ctx.fillRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
-            ctx.strokeStyle = '#7cb87c';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
 
-            // 2. Bar Impact Net (Bleu comme sur l'image)
+            // Bordure pointillée pour les barres de taxe
+            ctx.strokeStyle = '#4a90e2'; // Bleu
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]); // Pointillés : 5px de trait, 3px d'espace
+            ctx.strokeRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
+            ctx.setLineDash([]); // Réinitialiser pour les autres éléments
+
             const netY = getY(data.netImpact[i]);
-            ctx.fillStyle = data.netImpact[i] >= 0 ? '#9b8fb8' : '#e74c3c'; // Violet si positif, rouge si négatif
+            ctx.fillStyle = data.netImpact[i] >= 0 ? '#4CAF50' : '#e74c3c'; // Vert pour positif, rouge pour négatif
             ctx.fillRect(x, Math.min(zeroY, netY), barWidth, Math.abs(netY - zeroY));
 
-            // Labels Déciles
+            // Affichage du pourcentage à droite de la barre
+            if (data.percentages) {
+                const percentage = data.percentages[i];
+                const percentText = (percentage >= 0 ? '+' : '') + percentage.toFixed(1) + '%';
+                ctx.fillStyle = percentage >= 0 ? '#4CAF50' : '#e74c3c';
+                ctx.textAlign = 'left';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.fillText(percentText, x + barWidth + 5, netY - 2);
+            }
+
             ctx.fillStyle = '#2c3e50';
             ctx.textAlign = 'center';
             ctx.font = '12px Inter, sans-serif';
             ctx.fillText('D' + label, x + barWidth / 2, height - padding.bottom + 25);
         });
 
-        // X-axis title
         ctx.font = 'bold 12px Inter, sans-serif';
         ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
-    };
-
-    // ===== STATE & UPDATES =====
-    let state = {
-        redistributionPercent: 70,
-        ponderationPercent: 0,
-        bonusPercent: 0
     };
 
     const updateAll = () => {
         const data = calculateData(state);
         renderChart(data);
+
+        // Handle subsidies panel visibility and state
+        const panel = document.getElementById('subsidiesPanel');
+        const grid = document.querySelector('.content-grid');
+        const sliders = panel.querySelectorAll('.compact-slider');
+
+        if (state.redistributionPercent < 100) {
+            panel.style.display = 'block';
+            panel.classList.remove('disabled');
+            grid.classList.add('has-right-sidebar');
+            // Activer tous les curseurs
+            sliders.forEach(slider => slider.disabled = false);
+        } else {
+            // Garder visible mais griser
+            panel.style.display = 'block';
+            panel.classList.add('disabled');
+            grid.classList.add('has-right-sidebar');
+            // Désactiver tous les curseurs
+            sliders.forEach(slider => slider.disabled = true);
+        }
     };
 
     // ===== SLIDERS SETUP =====
@@ -146,19 +206,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const slider = document.getElementById(id);
         const display = document.getElementById(valueId);
 
-        if (!slider || !display) {
-            console.error('Missing element:', id, valueId);
-            return;
-        }
+        if (!slider || !display) return;
 
         const updateValue = () => {
-            const val = slider.value;
-            state[param] = parseInt(val);
+            const val = parseInt(slider.value);
+            state[param] = val;
 
             if (param === 'redistributionPercent') {
                 display.textContent = `Revenu ${val}% / Sub. ${100 - val}%`;
-            } else if (param === 'bonusPercent') {
-                display.textContent = '+' + val + '%';
+            } else if (param === 'carbonPrice') {
+                display.textContent = val + ' €/tCO2eq';
             } else {
                 display.textContent = val + '%';
             }
@@ -166,35 +223,111 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         slider.addEventListener('input', updateValue);
-        // Initial set
+        // Initial set logic
         if (param === 'redistributionPercent') {
             display.textContent = `Revenu ${slider.value}% / Sub. ${100 - slider.value}%`;
-        } else if (param === 'bonusPercent') {
-            display.textContent = '+' + slider.value + '%';
+        } else if (param === 'carbonPrice') {
+            display.textContent = slider.value + ' €/tCO2eq';
         } else {
             display.textContent = slider.value + '%';
         }
     };
 
+    // ===== SUBSIDIES MANAGEMENT =====
+    const initSubsidiesUI = () => {
+        const container = document.getElementById('subsidiesList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        state.subsidies.forEach((sub, index) => {
+            const control = document.createElement('div');
+            control.className = 'compact-slider-control';
+            control.innerHTML = `
+                <div class="compact-slider-name" title="${sub.name}">${sub.name}</div>
+                <div class="compact-slider-wrapper">
+                    <input type="range" class="compact-slider" id="${sub.id}" min="0" max="100" value="${sub.percent}">
+                    <span class="compact-slider-percentage" id="${sub.id}-percent">${sub.percent}%</span>
+                </div>
+            `;
+            container.appendChild(control);
+
+            const slider = control.querySelector('input');
+            slider.addEventListener('input', (e) => {
+                balanceSubsidies(index, parseInt(e.target.value));
+            });
+        });
+    };
+
+    const balanceSubsidies = (changedIndex, newValue) => {
+        const changedSub = state.subsidies[changedIndex];
+        const oldValue = changedSub.percent;
+        const delta = newValue - oldValue; // Changement appliqué
+
+        changedSub.percent = newValue;
+
+        // Répartition uniforme : -delta/N pour chacun des N autres curseurs
+        const others = state.subsidies.filter((_, i) => i !== changedIndex);
+        const N = others.length;
+        const uniformChange = -delta / N;
+
+        others.forEach(sub => {
+            sub.percent = Math.max(0, sub.percent + uniformChange);
+        });
+
+        // Correction pour les arrondis et s'assurer que la somme = 100
+        let total = state.subsidies.reduce((a, b) => a + b.percent, 0);
+        let diff = 100 - total;
+
+        if (Math.abs(diff) > 0.01) {
+            // Distribuer la différence sur tous les curseurs sauf celui modifié
+            const adjustPerOther = diff / N;
+            others.forEach(sub => {
+                sub.percent = Math.max(0, sub.percent + adjustPerOther);
+            });
+
+            // Vérification finale
+            total = state.subsidies.reduce((a, b) => a + b.percent, 0);
+            diff = 100 - total;
+
+            // Si encore un écart dû aux arrondis, ajuster le premier autre curseur
+            if (Math.abs(diff) > 0.01) {
+                const target = (changedIndex === 0) ? 1 : 0;
+                state.subsidies[target].percent = Math.max(0, state.subsidies[target].percent + diff);
+            }
+        }
+
+        updateSubsidiesUI();
+    };
+
+    const updateSubsidiesUI = () => {
+        state.subsidies.forEach(sub => {
+            const slider = document.getElementById(sub.id);
+            const percentSpan = document.getElementById(`${sub.id}-percent`);
+            if (slider) {
+                slider.value = sub.percent;
+            }
+            if (percentSpan) {
+                percentSpan.textContent = Math.round(sub.percent) + '%';
+            }
+        });
+        updateAll();
+    };
+
+    // Initialize Main Sliders
+    setupSlider('carbonPriceSlider', 'carbonPriceValue', 'carbonPrice');
     setupSlider('redistributionSlider', 'redistributionValue', 'redistributionPercent');
     setupSlider('ponderationSlider', 'ponderationValue', 'ponderationPercent');
     setupSlider('bonusSlider', 'bonusValue', 'bonusPercent');
 
+    // Initialize Subsidies UI
+    initSubsidiesUI();
+
     // Initial Render
     updateAll();
 
-    // Resize handling
     window.addEventListener('resize', () => {
         updateAll();
     });
 
-    // Download/Share (Simplified)
-    document.getElementById('downloadBtn')?.addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.download = 'taxe-carbone-impact.png';
-        link.href = document.getElementById('mainChart').toDataURL();
-        link.click();
-    });
-
-    console.log('Calculateur initialisé avec succès');
+    console.log('Simulation initialisée avec 12 subventions et logique de balance.');
 });
