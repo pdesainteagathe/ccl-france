@@ -356,6 +356,13 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
+.subsidy-total {
+    font-size: 0.75rem;
+    color: var(--color-success);
+    font-weight: normal;
+    margin-left: 8px;
+}
+
 .right-sidebar .section-subtitle {
     font-size: 0.75rem;
 }

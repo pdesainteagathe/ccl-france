@@ -179,9 +179,30 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
     };
 
+    const updateSubsidyTotal = () => {
+        const totalSubsidyAmountEl = document.getElementById('totalSubsidyAmount');
+        if (!totalSubsidyAmountEl) return;
+
+        // Calculer les émissions totales (somme des émissions par décile)
+        const totalEmissions = baseEmissions.reduce((a, b) => a + b, 0);
+
+        // Calculer le montant total collecté
+        const totalCollected = totalEmissions * state.carbonPrice;
+
+        // Calculer la part de subventions (100 - redistributionPercent)
+        const subsidyPercent = 100 - state.redistributionPercent;
+
+        // Calculer le montant des subventions en milliards d'euros
+        const subsidyAmount = (totalCollected * subsidyPercent / 100) / 1000; // Division par 1000 pour convertir en milliards
+
+        // Afficher le montant
+        totalSubsidyAmountEl.textContent = `(${subsidyAmount.toFixed(1)} Md€)`;
+    };
+
     const updateAll = () => {
         const data = calculateData(state);
         renderChart(data);
+        updateSubsidyTotal();
 
         // Handle subsidies panel visibility and state
         const panel = document.getElementById('subsidiesPanel');
