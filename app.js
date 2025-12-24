@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== SUBSIDIES CONFIGURATION =====
     const subsidiesNames = [
         "Pompe à chaleur",
+        "Géothermie",
         "Voiture électrique",
         "Vélo électrique",
         "Trains (Intercités/TER)",
@@ -15,9 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
         "Énergies renouvelables",
         "Car express régionaux",
         "Fret ferroviaire",
-        "Bornes de recharge",
+        "Installation de bornes de recharge",
+        "Prix des recharges",
         "Agriculture durable",
         "Industrie décarbonée",
+        "Fillière bois énergie",
         "Autres"
     ];
 
@@ -315,8 +318,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Main Sliders
     setupSlider('carbonPriceSlider', 'carbonPriceValue', 'carbonPrice');
-    setupSlider('redistributionSlider', 'redistributionValue', 'redistributionPercent');
-    setupSlider('ponderationSlider', 'ponderationValue', 'ponderationPercent');
+
+    // Slider de redistribution (met à jour les deux pourcentages)
+    const redistributionSlider = document.getElementById('redistributionSlider');
+    const subsidiesPercent = document.getElementById('subsidiesPercent');
+    const revenuePercent = document.getElementById('revenuePercent');
+
+    if (redistributionSlider && subsidiesPercent && revenuePercent) {
+        const updateRedistribution = () => {
+            const val = parseInt(redistributionSlider.value);
+            state.redistributionPercent = val;
+            subsidiesPercent.textContent = `Sub. ${100 - val}%`;
+            revenuePercent.textContent = `Revenu ${val}%`;
+            updateAll();
+        };
+
+        redistributionSlider.addEventListener('input', updateRedistribution);
+        // Initialisation
+        subsidiesPercent.textContent = `Sub. ${100 - redistributionSlider.value}%`;
+        revenuePercent.textContent = `Revenu ${redistributionSlider.value}%`;
+    }
+
+    // Slider de pondération (sans affichage de valeur, utilise l'icône d'aide)
+    const ponderationSlider = document.getElementById('ponderationSlider');
+    if (ponderationSlider) {
+        ponderationSlider.addEventListener('input', (e) => {
+            state.ponderationPercent = parseInt(e.target.value);
+            updateAll();
+        });
+    }
+
     setupSlider('bonusSlider', 'bonusValue', 'bonusPercent');
 
     // Initialize Subsidies UI

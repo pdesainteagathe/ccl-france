@@ -47,7 +47,12 @@
                     <div class="config-content">
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Prix de la taxe carbone</span>
+                                <span>Prix de la taxe carbone
+                                    <span class="help-icon"
+                                        data-tooltip="On suppose ici une taxe carbone qui couvre tous les usages d'énergie fossile, accompagnée d'un ajustement aux frontières équivalent pour les importations.">
+                                        ?
+                                    </span>
+                                </span>
                                 <span class="slider-value" id="carbonPriceValue">100 €/t CO2eq</span>
                             </div>
                             <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100">
@@ -56,17 +61,24 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Part revenu carbone / subventions</span>
-                                <span class="slider-value" id="redistributionValue">Revenu 100% / Sub. 0%</span>
+                                <span>Revenu direct ou subventions ?</span>
+                            </div>
+                            <div class="slider-percentages">
+                                <span class="slider-percent-left" id="subsidiesPercent">Sub. 0%</span>
+                                <span class="slider-percent-right" id="revenuePercent">Revenu 100%</span>
                             </div>
                             <input type="range" class="slider" id="redistributionSlider" min="0" max="100" value="100">
                             <div class="slider-track-fill" id="redistributionTrackFill"></div>
                         </div>
 
+
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Pondération bas revenus</span>
-                                <span class="slider-value" id="ponderationValue">0%</span>
+                                <span>Bonus bas revenus</span>
+                                <span class="help-icon"
+                                    data-tooltip="Plus ce bonus est élevé, plus les ménages à bas revenus reçoivent une part importante de la redistribution. Le calcul utilise une pondération progressive qui favorise les déciles inférieurs.">
+                                    ?
+                                </span>
                             </div>
                             <input type="range" class="slider" id="ponderationSlider" min="0" max="100" value="0">
                             <div class="slider-track-fill" id="ponderationTrackFill"></div>
@@ -74,7 +86,7 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Ciblage zones rurales</span>
+                                <span>Bonus zones rurales</span>
                                 <span class="slider-value" id="bonusValue">0%</span>
                             </div>
                             <input type="range" class="slider" id="bonusSlider" min="0" max="200" value="0">
@@ -97,7 +109,7 @@
                             <span style="background: #4CAF50;"></span>
                             <span style="background: #e74c3c;"></span>
                         </span>
-                        <span>Transfert Net (Taxe + Redistribution)</span>
+                        <span>Coût après redistribution</span>
                     </div>
                 </div>
 

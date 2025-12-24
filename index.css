@@ -435,8 +435,74 @@ body {
     border-radius: var(--radius-full);
     font-weight: 600;
     color: var(--color-text-primary);
-    min-width: 50px;
+    min-width: 60px;
     text-align: center;
+}
+
+/* Pourcentages de part et d'autre du slider */
+.slider-percentages {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.slider-percent-left {
+    color: var(--color-primary);
+}
+
+.slider-percent-right {
+    color: var(--color-success);
+}
+
+/* Icône d'aide avec tooltip */
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: help;
+    position: relative;
+    margin-left: 6px;
+}
+
+.help-icon:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 8px);
+    transform: none;
+    background: rgba(44, 62, 80, 0.98);
+    color: white;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: normal;
+    white-space: normal;
+    width: 340px;
+    text-align: left;
+    line-height: 1.6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.help-icon:hover::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    bottom: calc(100% + 2px);
+    transform: none;
+    border: 6px solid transparent;
+    border-top-color: rgba(44, 62, 80, 0.98);
+    z-index: 1000;
 }
 
 .slider {
