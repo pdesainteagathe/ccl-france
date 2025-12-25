@@ -53,18 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // state.redistributionPercent représente ici la part "Revenu Direct"
         const totalToRedistribute = totalCollected * (state.redistributionPercent / 100);
 
+
         // 3. Calcul des poids pour la redistribution (Revenu Direct)
-        // Coeff de ruralité : décroissant par décile (hyp: plus rural en bas de l'échelle)
-        const ruralityScores = [1.3, 1.2, 1.1, 1.05, 1.0, 0.95, 0.9, 0.85, 0.8, 0.75];
+
+        // Coefficients de compensation pour bonus zones rurales
+        // Source: INSEE FiLoSoFi 2017 + ADEME empreinte carbone territoriale
+        // Les déciles bas (D1-D3) sont plus présents en zones rurales (+16.4% à bonus 100%)
+        // Les déciles moyens (D4-D6) sont équilibrés (+12.4%)
+        // Les déciles hauts (D7-D10) sont concentrés en zones urbaines (+7.4%)
+        const ruralCompensationCoefficients = [
+            0.165, 0.165, 0.165,  // D1-D3: +16.4% compensation à bonus 100%
+            0.124, 0.124, 0.124,  // D4-D6: +12.4%
+            0.074, 0.074, 0.074, 0.074  // D7-D10: +7.4%
+        ];
 
         let weights = deciles.map((_, i) => {
             const decileNum = i + 1;
             // Poids de base (1) modulé par la pondération faible revenus (puissance)
             let w = Math.pow(11 - decileNum, state.ponderationPercent / 25);
 
-            // Modulation par le bonus rural (linéaire et moins prononcé que la pondération)
-            const rFactor = 1 + (ruralityScores[i] - 1) * (state.bonusPercent / 100);
-            return w * rFactor;
+            // Modulation par le bonus rural (proportionnel au coefficient INSEE/ADEME)
+            const ruralBonus = ruralCompensationCoefficients[i] * (state.bonusPercent / 100);
+            return w * (1 + ruralBonus);
         });
 
         const totalWeight = weights.reduce((a, b) => a + b, 0);
