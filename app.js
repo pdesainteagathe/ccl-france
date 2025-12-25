@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Construire l'URL avec les paramètres
                 const params = new URLSearchParams(voteData);
-                const url = `https://script.google.com/macros/s/AKfycbznqgjJYkb-WczYZtCjZazDOkOOTALdNVHzlWS5lGFZO26wW9xbd67rTfdD9RG5y32R6w/exec?${params.toString()}`;
+                const url = `https://script.google.com/macros/s/AKfycbztePuYwloLJrd5_hgQ259yauRE4BpjsTbHCvdpTi3Hnibu73j0IyycJbJL1AkEk9BcLQ/exec?${params.toString()}`;
 
                 // Envoyer au Google Sheet via GET
                 const response = await fetch(url, {
