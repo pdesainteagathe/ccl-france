@@ -447,5 +447,63 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAll();
     });
 
+    // ===== VOTE FUNCTIONALITY =====
+    const voteBtn = document.getElementById('voteBtn');
+    if (voteBtn) {
+        voteBtn.addEventListener('click', async () => {
+            // Désactiver le bouton pendant l'envoi
+            voteBtn.disabled = true;
+            voteBtn.textContent = 'Envoi...';
+
+            try {
+                // Préparer les données de vote
+                const voteData = {
+                    timestamp: new Date().toISOString(),
+                    carbonPrice: state.carbonPrice,
+                    redistributionPercent: state.redistributionPercent,
+                    ponderationPercent: state.ponderationPercent,
+                    bonusPercent: state.bonusPercent,
+                    subsidies: state.subsidies.map(sub => ({
+                        name: sub.name,
+                        percent: sub.percent
+                    }))
+                };
+
+                // Envoyer au Google Sheet
+                const response = await fetch('https://script.google.com/macros/s/AKfycbznqgjJYkb-WczYZtCjZazDOkOOTALdNVHzlWS5lGFZO26wW9xbd67rTfdD9RG5y32R6w/exec', {
+                    method: 'POST',
+                    mode: 'no-cors', // Important pour Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(voteData)
+                });
+
+                // Succès (no-cors ne permet pas de lire la réponse, mais si pas d'erreur = succès)
+                voteBtn.innerHTML = '<span class="vote-text-main">✓ Vote enregistré !</span><span class="vote-text-sub">Merci pour votre participation</span>';
+                voteBtn.style.background = '#4CAF50';
+
+                // Réactiver après 3 secondes
+                setTimeout(() => {
+                    voteBtn.innerHTML = '<span class="vote-text-main">Je vote</span><span class="vote-text-sub">pour cette redistribution</span>';
+                    voteBtn.style.background = '';
+                    voteBtn.disabled = false;
+                }, 3000);
+
+            } catch (error) {
+                console.error('Erreur lors de l\'envoi du vote:', error);
+                voteBtn.innerHTML = '<span class="vote-text-main">⚠ Erreur</span><span class="vote-text-sub">Réessayez</span>';
+                voteBtn.style.background = '#e74c3c';
+
+                // Réactiver après 3 secondes
+                setTimeout(() => {
+                    voteBtn.innerHTML = '<span class="vote-text-main">Je vote</span><span class="vote-text-sub">pour cette redistribution</span>';
+                    voteBtn.style.background = '';
+                    voteBtn.disabled = false;
+                }, 3000);
+            }
+        });
+    }
+
     console.log('Simulation initialisée avec 12 subventions et logique de balance.');
 });
