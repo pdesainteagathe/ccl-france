@@ -463,20 +463,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     redistributionPercent: state.redistributionPercent,
                     ponderationPercent: state.ponderationPercent,
                     bonusPercent: state.bonusPercent,
-                    subsidies: state.subsidies.map(sub => ({
-                        name: sub.name,
-                        percent: sub.percent
-                    }))
                 };
 
-                // Envoyer au Google Sheet
-                const response = await fetch('https://script.google.com/macros/s/AKfycbznqgjJYkb-WczYZtCjZazDOkOOTALdNVHzlWS5lGFZO26wW9xbd67rTfdD9RG5y32R6w/exec', {
-                    method: 'POST',
-                    mode: 'no-cors', // Important pour Google Apps Script
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(voteData)
+                // Ajouter chaque subvention comme paramètre séparé
+                state.subsidies.forEach((sub, index) => {
+                    voteData[`subsidy_${index}_name`] = sub.name;
+                    voteData[`subsidy_${index}_percent`] = Math.round(sub.percent);
+                });
+
+                // Construire l'URL avec les paramètres
+                const params = new URLSearchParams(voteData);
+                const url = `https://script.google.com/macros/s/AKfycbznqgjJYkb-WczYZtCjZazDOkOOTALdNVHzlWS5lGFZO26wW9xbd67rTfdD9RG5y32R6w/exec?${params.toString()}`;
+
+                // Envoyer au Google Sheet via GET
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'no-cors'
                 });
 
                 // Succès (no-cors ne permet pas de lire la réponse, mais si pas d'erreur = succès)
