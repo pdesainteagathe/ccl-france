@@ -161,21 +161,19 @@ body {
 /* ===== VOTE BUTTON (Mega Shiny Glassy Style) ===== */
 .vote-button {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     background: linear-gradient(180deg,
             #5a9a5a 0%,
             #3d7a3d 48%,
             #1d4a1d 50%,
             #2fa03b 100%);
     border: 1.5px solid #1a3a1a;
-    padding: 12px 42px;
-    /* Réduit de 30% */
+    padding: 14px 32px;
     border-radius: 16px;
     color: white;
-    font-weight: 800;
-    font-size: 1.12rem;
-    /* Réduit de 30% */
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -185,8 +183,7 @@ body {
         0 0 15px rgba(46, 204, 113, 0.3);
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-shadow: 0 -1.5px 1px rgba(0, 0, 0, 0.7);
-    min-width: 196px;
-    /* Réduit de 30% */
+    min-width: 220px;
     font-family: 'Outfit', sans-serif;
 }
 
@@ -205,17 +202,19 @@ body {
     z-index: 10;
 }
 
-/* Arrow decoration (white triangle) */
-.vote-button::after {
-    content: '';
-    display: inline-block;
-    width: 0;
-    height: 0;
-    border-top: 14px solid transparent;
-    border-bottom: 14px solid transparent;
-    border-left: 20px solid white;
-    margin-left: 25px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+/* Texte principal du bouton */
+.vote-text-main {
+    font-weight: 800;
+    font-size: 1.2rem;
+    line-height: 1.2;
+}
+
+/* Sous-texte du bouton */
+.vote-text-sub {
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1;
+    opacity: 0.95;
 }
 
 .vote-button:hover {
