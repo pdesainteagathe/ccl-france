@@ -30,7 +30,7 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
    - 100% = Tout est redistribué directement aux ménages
    - 50% = Hybride (moitié direct, moitié subventions)
 
-3. **Bonus faible revenus** (0-200%)
+3. **Bonus faibles revenus** (0-200%)
    - Pondération progressive pour favoriser les déciles bas
    - Basé sur une fonction puissance qui augmente le poids des déciles inférieurs
 

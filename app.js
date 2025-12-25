@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let weights = deciles.map((_, i) => {
             const decileNum = i + 1;
-            // Poids de base (1) modulé par la pondération faible revenus (puissance)
+            // Poids de base (1) modulé par la pondération faibles revenus (puissance)
             let w = Math.pow(11 - decileNum, state.ponderationPercent / 25);
 
             // Modulation par le bonus rural (proportionnel au coefficient INSEE/ADEME)
