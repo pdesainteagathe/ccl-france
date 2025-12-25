@@ -342,8 +342,32 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAll();
     };
 
-    // Initialize Main Sliders
-    setupSlider('carbonPriceSlider', 'carbonPriceValue', 'carbonPrice');
+
+    // Initialize Carbon Price Slider with tooltip on thumb
+    const carbonPriceSlider = document.getElementById('carbonPriceSlider');
+    const carbonPriceTooltip = document.getElementById('carbonPriceTooltip');
+
+    if (carbonPriceSlider && carbonPriceTooltip) {
+        const updateCarbonPrice = () => {
+            const val = parseInt(carbonPriceSlider.value);
+            state.carbonPrice = val;
+
+            // Update tooltip text
+            carbonPriceTooltip.textContent = `${val} €/tCO2eq`;
+
+            // Calculate position (percentage along the slider)
+            const min = parseInt(carbonPriceSlider.min);
+            const max = parseInt(carbonPriceSlider.max);
+            const percent = ((val - min) / (max - min)) * 100;
+            carbonPriceTooltip.style.left = `${percent}%`;
+
+            updateAll();
+        };
+
+        carbonPriceSlider.addEventListener('input', updateCarbonPrice);
+        // Initialize
+        updateCarbonPrice();
+    }
 
     // Slider de redistribution (met à jour les deux pourcentages)
     const redistributionSlider = document.getElementById('redistributionSlider');

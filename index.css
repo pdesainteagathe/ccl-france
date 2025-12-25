@@ -309,16 +309,15 @@ body {
     transform: translateY(-1px);
 }
 
-/* ===== GRID LAYOUT ===== */
 .content-grid {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 260px 1fr;
     gap: var(--spacing-xl);
     transition: grid-template-columns 0.4s ease;
 }
 
 .content-grid.has-right-sidebar {
-    grid-template-columns: 320px 1fr 320px;
+    grid-template-columns: 260px 1fr 260px;
 }
 
 /* ===== SIDEBARS ===== */
@@ -451,6 +450,47 @@ body {
     text-align: center;
     white-space: nowrap;
     font-size: 0.9em;
+}
+
+/* Wrapper pour le slider avec valeur sur le curseur */
+.slider-wrapper {
+    position: relative;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Tooltip de valeur sur le curseur */
+.slider-value-tooltip {
+    position: absolute;
+    top: 25px;
+    left: calc(((100 - 45) / (300 - 45)) * 100%);
+    /* Position initiale pour valeur 100 */
+    transform: translateX(-50%);
+    background: var(--color-yellow-highlight);
+    border: 1.5px solid var(--color-yellow-border);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    transition: left 0.1s ease-out;
+}
+
+/* Petite flèche en haut du tooltip (pointe vers le curseur) */
+.slider-value-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--color-yellow-border);
 }
 
 /* Pourcentages de part et d'autre du slider */

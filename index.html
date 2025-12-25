@@ -51,9 +51,12 @@
                             <div class="slider-label">
                                 <span>Prix de la taxe carbone <span class="help-icon"
                                         data-tooltip="On suppose ici une taxe carbone qui couvre tous les usages d'énergie fossile, accompagnée d'un ajustement aux frontières équivalent pour les importations.">?</span></span>
-                                <span class="slider-value" id="carbonPriceValue">100 €/t CO2eq</span>
                             </div>
-                            <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100">
+                            <div class="slider-wrapper">
+                                <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100"
+                                    data-value="100">
+                                <div class="slider-value-tooltip" id="carbonPriceTooltip">100 €/tCO2eq</div>
+                            </div>
                             <div class="slider-track-fill" id="carbonPriceTrackFill"></div>
                         </div>
 
