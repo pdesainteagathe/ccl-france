@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw Bars
         const barWidth = (chartWidth / 10) * 0.7;
         const groupWidth = chartWidth / 10;
+        const isMobile = width < 500; // Déplacé ici pour être accessible partout
 
         data.labels.forEach((label, i) => {
             const x = padding.left + i * groupWidth + (groupWidth - barWidth) / 2;
@@ -171,11 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ctx.fillStyle = '#2c3e50';
             ctx.textAlign = 'center';
-            ctx.font = '12px Inter, sans-serif';
+            // Utiliser isMobile déclaré avant le forEach
+            ctx.font = isMobile ? '9px Inter, sans-serif' : '12px Inter, sans-serif';
             ctx.fillText('D' + label, x + barWidth / 2, height - padding.bottom + 25);
         });
 
-        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.font = isMobile ? 'bold 10px Inter, sans-serif' : 'bold 12px Inter, sans-serif';
         ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
     };
 
@@ -264,8 +266,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== SUBSIDIES MANAGEMENT =====
     const initSubsidiesUI = () => {
+        console.log('[INIT] initSubsidiesUI called, state.subsidies:', state.subsidies);
         const container = document.getElementById('subsidiesList');
-        if (!container) return;
+        if (!container) {
+            console.error('[INIT] subsidiesList container not found!');
+            return;
+        }
+        console.log('[INIT] container found, proceeding with UI generation');
         container.innerHTML = '';
 
         state.subsidies.forEach((sub, index) => {
@@ -401,7 +408,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSlider('bonusSlider', 'bonusValue', 'bonusPercent');
 
     // Initialize Subsidies UI
+    console.log('[INIT] About to call initSubsidiesUI');
     initSubsidiesUI();
+    console.log('[INIT] initSubsidiesUI completed');
 
     // Initial Render
     updateAll();
