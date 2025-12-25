@@ -297,39 +297,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const balanceSubsidies = (changedIndex, newValue) => {
         const changedSub = state.subsidies[changedIndex];
         const oldValue = changedSub.percent;
-        const delta = newValue - oldValue; // Changement appliqué
 
+        // Clamper la nouvelle valeur entre 0 et 100
+        newValue = Math.max(0, Math.min(100, newValue));
+
+        // Si changement à 100%, mettre tous les autres à 0
+        if (newValue === 100) {
+            state.subsidies.forEach((sub, i) => {
+                if (i === changedIndex) {
+                    sub.percent = 100;
+                } else {
+                    sub.percent = 0;
+                }
+            });
+            updateSubsidiesUI();
+            return;
+        }
+
+        // Appliquer le nouveau pourcentage
         changedSub.percent = newValue;
 
-        // Répartition uniforme : -delta/N pour chacun des N autres curseurs
-        const others = state.subsidies.filter((_, i) => i !== changedIndex);
-        const N = others.length;
-        const uniformChange = -delta / N;
+        // Calculer le reste à distribuer
+        const remaining = 100 - newValue;
 
-        others.forEach(sub => {
-            sub.percent = Math.max(0, sub.percent + uniformChange);
+        // Récupérer les autres sliders (excluant le slider modifié)
+        const otherIndices = state.subsidies
+            .map((_, i) => i)
+            .filter(i => i !== changedIndex);
+
+        // Calculer la somme actuelle des autres sliders
+        const currentOthersSum = otherIndices.reduce((sum, i) => sum + state.subsidies[i].percent, 0);
+
+        if (currentOthersSum === 0) {
+            // Si tous les autres sont à 0, distribuer uniformément
+            const perOther = remaining / otherIndices.length;
+            otherIndices.forEach(i => {
+                state.subsidies[i].percent = perOther;
+            });
+        } else {
+            // Redistribuer proportionnellement au poids actuel
+            otherIndices.forEach(i => {
+                const ratio = state.subsidies[i].percent / currentOthersSum;
+                state.subsidies[i].percent = remaining * ratio;
+            });
+        }
+
+        // Arrondir tous les pourcentages
+        state.subsidies.forEach(sub => {
+            sub.percent = Math.round(sub.percent);
         });
 
-        // Correction pour les arrondis et s'assurer que la somme = 100
+        // Correction finale pour garantir exactement 100%
         let total = state.subsidies.reduce((a, b) => a + b.percent, 0);
-        let diff = 100 - total;
+        const diff = 100 - total;
 
-        if (Math.abs(diff) > 0.01) {
-            // Distribuer la différence sur tous les curseurs sauf celui modifié
-            const adjustPerOther = diff / N;
-            others.forEach(sub => {
-                sub.percent = Math.max(0, sub.percent + adjustPerOther);
-            });
+        if (diff !== 0) {
+            // Ajuster le slider qui a le plus de marge (pas celui qu'on vient de modifier)
+            const adjustableIndex = otherIndices.reduce((maxIdx, i) => {
+                return state.subsidies[i].percent > state.subsidies[maxIdx].percent ? i : maxIdx;
+            }, otherIndices[0]);
 
-            // Vérification finale
-            total = state.subsidies.reduce((a, b) => a + b.percent, 0);
-            diff = 100 - total;
-
-            // Si encore un écart dû aux arrondis, ajuster le premier autre curseur
-            if (Math.abs(diff) > 0.01) {
-                const target = (changedIndex === 0) ? 1 : 0;
-                state.subsidies[target].percent = Math.max(0, state.subsidies[target].percent + diff);
-            }
+            state.subsidies[adjustableIndex].percent = Math.max(0, state.subsidies[adjustableIndex].percent + diff);
         }
 
         updateSubsidiesUI();
