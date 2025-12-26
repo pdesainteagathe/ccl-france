@@ -443,6 +443,7 @@ body {
     z-index: 99999;
 }
 
+
 .help-icon:hover::before {
     content: '';
     position: absolute;
@@ -452,6 +453,43 @@ body {
     border: 6px solid transparent;
     border-top-color: rgba(44, 62, 80, 0.98);
     z-index: 10000;
+}
+
+/* Tooltip du prix carbone: afficher en dessous au lieu d'en dessus */
+.slider-label:first-child .help-icon:hover::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.slider-label:first-child .help-icon:hover::before {
+    bottom: auto;
+    top: calc(100% + 2px);
+    border-top-color: transparent;
+    border-bottom-color: rgba(44, 62, 80, 0.98);
+}
+
+/* Lien méthodologie */
+.methodology-link {
+    display: block;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+    text-decoration: none;
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.methodology-link:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
 }
 
 .slider {

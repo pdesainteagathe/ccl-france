@@ -25,7 +25,7 @@
                         <div class="slider-control">
                             <div class="slider-label">
                                 <span>Prix de la taxe carbone <span class="help-icon"
-                                        data-tooltip="On suppose ici une taxe carbone qui couvre tous les usages d'énergie fossile, accompagnée d'un ajustement aux frontières équivalent pour les importations.">?</span></span>
+                                        data-tooltip="On suppose ici une taxe carbone qui couvre tous les usages d'énergie fossile, accompagnée d'un ajustement aux frontières équivalent pour les importations. Voir méthodologie.">?</span></span>
                             </div>
                             <div class="slider-wrapper">
                                 <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100"
@@ -50,10 +50,8 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Bonus faibles revenus <span class="help-icon" data-tooltip="Avec une redistribution uniforme, les bas déciles de revenus sont déjà gagnants, car ils émettent moins en moyenne que les hauts déciles. Néanmoins, on peut vouloir accentuer cette répartition avec un bonus 'faibles revenus'
-                                        . Plus ce bonus est élevé, plus les ménages à faibles revenus reçoivent une part
-                                        importante de la redistribution. Le calcul utilise une pondération progressive
-                                        qui favorise les déciles inférieurs.">?</span></span>
+                                <span>Bonus faibles revenus <span class="help-icon"
+                                        data-tooltip="Avec une redistribution uniforme, les bas déciles de revenus sont déjà gagnants, car ils émettent moins en moyenne que les hauts déciles. Néanmoins, on peut vouloir accentuer cette répartition avec un bonus 'faibles revenus'. Plus ce bonus est élevé, plus les ménages à faibles revenus reçoivent une part importante de la redistribution. Le calcul utilise une pondération progressive qui favorise les déciles inférieurs. Voir méthodologie.">?</span></span>
                             </div>
                             <input type="range" class="slider" id="ponderationSlider" min="0" max="100" value="0">
                             <div class="slider-track-fill" id="ponderationTrackFill"></div>
@@ -62,7 +60,7 @@
                         <div class="slider-control">
                             <div class="slider-label">
                                 <span>Bonus zones rurales <span class="help-icon"
-                                        data-tooltip="Compense le surcoût carbone des ménages vivant en zones rurales et périurbaines. Les ménages ruraux émettent en moyenne +50% de CO2 (transport et logement) malgré des revenus médians plus faibles, et ont moins d'alternatives (dépendance à la voiture, logements anciens). Les déciles bas (D1-D3), plus présents en zones rurales, reçoivent jusqu'à +16% de redistribution à bonus 100%. Basé sur données INSEE FiLoSoFi 2017 et ADEME.">?</span></span>
+                                        data-tooltip="Compense le surcoût carbone des ménages vivant en zones rurales et périurbaines. Les ménages ruraux émettent en moyenne +50% de CO2 (transport et logement) malgré des revenus médians plus faibles, et ont moins d'alternatives (dépendance à la voiture, logements anciens). Les déciles bas (D1-D3), plus présents en zones rurales, reçoivent jusqu'à +16% de redistribution à bonus 100%. Basé sur données INSEE FiLoSoFi 2017 et ADEME. Voir méthodologie.">?</span></span>
                             </div>
                             <input type="range" class="slider" id="bonusSlider" min="0" max="200" value="0">
                             <div class="slider-track-fill" id="bonusTrackFill"></div>
@@ -73,6 +71,9 @@
                         <span class="vote-text-main">Je vote</span>
                         <span class="vote-text-sub">pour cette redistribution</span>
                     </button>
+
+                    <a href="https://github.com/pdesainteagathe/ccl-france/blob/main/README.md" target="_blank"
+                        class="methodology-link">📖 Méthodologie complète</a>
                 </div>
             </aside>
 
@@ -101,7 +102,7 @@
 
                 <div class="chart-footer">
                     <div class="chart-source">
-                        Source: Pottier et al. (2020). Calculs propres basés sur les données nationales d'émissions.
+                        Source: Pottier et al. (2020).
                     </div>
                 </div>
             </section>
