@@ -82,19 +82,113 @@ Total_collecté = Σ(Taxe[décile] × Nombre_ménages[décile])
 ```
 
 #### 3. Redistribution directe (Revenu Direct)
+
+Cette étape détermine comment le revenu direct est réparti entre les déciles, avec possibilité de favoriser les bas revenus.
+
+##### a) Montant à redistribuer
 ```javascript
 Part_directe = Total_collecté × (Redistribution% / 100)
+```
 
-// Poids de base avec bonus bas revenus
-Poids[décile] = (11 - décile)^(Pondération/25)
+**Exemple** : Si la taxe collecte 50 milliards d'€ et que 70% vont vers le revenu direct :
+```
+Part_directe = 50 Mds€ × 0.70 = 35 Mds€ à redistribuer
+```
 
-// Application bonus rural
+##### b) Calcul des poids avec bonus faibles revenus
+
+Le **bonus faibles revenus** utilise une **fonction puissance** pour moduler progressivement l'avantage donné aux déciles bas.
+
+**Formule** :
+```javascript
+Poids[décile] = (11 - numéro_décile)^(Pondération/25)
+```
+
+**Composantes** :
+- `(11 - numéro_décile)` : Base décroissante (10 pour D1, 9 pour D2, ..., 1 pour D10)
+- `Pondération/25` : Exposant qui contrôle l'intensité de la progressivité
+  - À Pondération = 0 : exposant = 0 → tous les poids = 1 (uniforme)
+  - À Pondération = 25 : exposant = 1 → poids proportionnels (10, 9, 8, ..., 1)
+  - À Pondération = 50 : exposant = 2 → favorise fortement les bas déciles
+  - À Pondération = 100 : exposant = 4 → très forte progressivité
+
+**Pourquoi une fonction puissance ?**
+
+Une fonction puissance permet une **modulation douce et continue** de la redistribution :
+- Évite les effets de seuil (pas de rupture brutale entre déciles)
+- Permet de tester un continuum de politiques redistributives
+- Reste mathématiquement simple et compréhensible
+
+**Exemples concrets** :
+
+| Décile | Base<br>(11-D) | Pond. 0%<br>exp=0 | Pond. 25%<br>exp=1 | Pond. 50%<br>exp=2 | Pond. 100%<br>exp=4 |
+|--------|---------|---------|---------|---------|---------|
+| **D1** | 10 | 10^0 = **1.00** | 10^1 = **10.0** | 10^2 = **100** | 10^4 = **10,000** |
+| **D2** | 9 | 9^0 = **1.00** | 9^1 = **9.0** | 9^2 = **81** | 9^4 = **6,561** |
+| **D3** | 8 | 8^0 = **1.00** | 8^1 = **8.0** | 8^2 = **64** | 8^4 = **4,096** |
+| **D4** | 7 | 7^0 = **1.00** | 7^1 = **7.0** | 7^2 = **49** | 7^4 = **2,401** |
+| **D5** | 6 | 6^0 = **1.00** | 6^1 = **6.0** | 6^2 = **36** | 6^4 = **1,296** |
+| **D6** | 5 | 5^0 = **1.00** | 5^1 = **5.0** | 5^2 = **25** | 5^4 = **625** |
+| **D7** | 4 | 4^0 = **1.00** | 4^1 = **4.0** | 4^2 = **16** | 4^4 = **256** |
+| **D8** | 3 | 3^0 = **1.00** | 3^1 = **3.0** | 3^2 = **9** | 3^4 = **81** |
+| **D9** | 2 | 2^0 = **1.00** | 2^1 = **2.0** | 2^2 = **4** | 2^4 = **16** |
+| **D10** | 1 | 1^0 = **1.00** | 1^1 = **1.0** | 1^2 = **1** | 1^4 = **1** |
+| **Somme** | - | **10** | **55** | **385** | **25,333** |
+
+**Impact sur la redistribution normalisée** (pour 10 Mds€ à redistribuer) :
+
+| Décile | Pond. 0%<br>(uniforme) | Pond. 25%<br>(linéaire) | Pond. 50%<br>(quadratique) | Pond. 100%<br>(forte) |
+|--------|---------|---------|---------|---------|
+| **D1** | 1.00 Md€ (10%) | 1.82 Md€ (18.2%) | 2.60 Md€ (26.0%) | 3.95 Md€ (39.5%) |
+| **D2** | 1.00 Md€ (10%) | 1.64 Md€ (16.4%) | 2.10 Md€ (21.0%) | 2.59 Md€ (25.9%) |
+| **D3** | 1.00 Md€ (10%) | 1.45 Md€ (14.5%) | 1.66 Md€ (16.6%) | 1.62 Md€ (16.2%) |
+| **D4** | 1.00 Md€ (10%) | 1.27 Md€ (12.7%) | 1.27 Md€ (12.7%) | 0.95 Md€ (9.5%) |
+| **D5** | 1.00 Md€ (10%) | 1.09 Md€ (10.9%) | 0.94 Md€ (9.4%) | 0.51 Md€ (5.1%) |
+| **D6** | 1.00 Md€ (10%) | 0.91 Md€ (9.1%) | 0.65 Md€ (6.5%) | 0.25 Md€ (2.5%) |
+| **D7** | 1.00 Md€ (10%) | 0.73 Md€ (7.3%) | 0.42 Md€ (4.2%) | 0.10 Md€ (1.0%) |
+| **D8** | 1.00 Md€ (10%) | 0.55 Md€ (5.5%) | 0.23 Md€ (2.3%) | 0.03 Md€ (0.3%) |
+| **D9** | 1.00 Md€ (10%) | 0.36 Md€ (3.6%) | 0.10 Md€ (1.0%) | 0.01 Md€ (0.1%) |
+| **D10** | 1.00 Md€ (10%) | 0.18 Md€ (1.8%) | 0.03 Md€ (0.3%) | 0.00 Md€ (0.0%) |
+
+**Observations** :
+- **À 0%** : Distribution **parfaitement uniforme** (10% pour tous)
+- **À 25%** : D1 reçoit 1.82× plus que la moyenne (18.2% vs 10%)
+- **À 50%** : D1 reçoit 2.60× plus que la moyenne, D10 presque rien (0.3%)
+- **À 100%** : **Très progressive** : D1 reçoit 39.5%, D10 quasi rien (0.0%)
+
+##### c) Application du bonus zones rurales
+
+Si le bonus rural est activé (> 0%), les poids sont ensuite ajustés :
+
+```javascript
 if (Bonus_rural > 0) {
     Poids[décile] *= (1 + Coef_rural[décile] × Bonus_rural/100)
 }
+```
 
+Voir section "[Bonus Zones Rurales](#-bonus-zones-rurales---méthodologie-détaillée)" pour le détail des coefficients.
+
+##### d) Normalisation et redistribution finale
+
+Les poids sont normalisés pour que leur somme = Part_directe, puis chaque décile reçoit sa part :
+
+```javascript
 // Normalisation
-Redistribution[décile] = (Poids[décile] / Σ Poids) × Part_directe
+Somme_poids = Σ Poids[tous les déciles]
+
+// Redistribution finale
+Redistribution[décile] = (Poids[décile] / Somme_poids) × Part_directe
+```
+
+**Exemple complet** avec Pondération = 50%, Bonus rural = 0%, Part directe = 10 Mds€ :
+```
+Poids bruts: [100, 81, 64, 49, 36, 25, 16, 9, 4, 1]
+Somme = 385
+
+Redistribution D1 = (100 / 385) × 10 Mds€ = 2.60 Mds€
+Redistribution D2 = (81 / 385) × 10 Mds€ = 2.10 Mds€
+...
+Redistribution D10 = (1 / 385) × 10 Mds€ = 0.03 Mds€
 ```
 
 #### 4. Subventions ciblées
