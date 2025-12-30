@@ -305,6 +305,22 @@ body {
     margin-bottom: var(--spacing-lg);
 }
 
+/* ===== MOBILE INSTRUCTION MESSAGE ===== */
+.mobile-instruction {
+    display: none;
+    /* Masqué par défaut sur desktop */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    font-weight: 500;
+}
+
 /* ===== SLIDER ===== */
 .slider-control {
     margin-bottom: var(--spacing-xl);
@@ -944,6 +960,11 @@ input:checked+.toggle-slider:before {
         position: static;
         width: 100%;
         margin-bottom: var(--spacing-lg);
+    }
+
+    /* Afficher le message instructif sur mobile */
+    .mobile-instruction {
+        display: block;
     }
 }
 
