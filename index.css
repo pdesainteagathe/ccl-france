@@ -354,15 +354,17 @@ body {
 .slider-label {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: var(--spacing-md);
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
+    gap: var(--spacing-sm);
 }
 
 .slider-label>span {
-    display: inline;
-    white-space: nowrap;
+    flex: 1;
+    word-wrap: break-word;
+    line-height: 1.4;
 }
 
 .slider-value {
