@@ -321,6 +321,23 @@ body {
     font-weight: 500;
 }
 
+/* Message hint mobile (au-dessus des sliders) */
+.mobile-hint {
+    display: none;
+    /* Masqué par défaut sur desktop */
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+
 /* ===== SLIDER ===== */
 .slider-control {
     margin-bottom: var(--spacing-xl);
@@ -964,6 +981,11 @@ input:checked+.toggle-slider:before {
 
     /* Afficher le message instructif sur mobile */
     .mobile-instruction {
+        display: block;
+    }
+
+    /* Afficher le hint mobile */
+    .mobile-hint {
         display: block;
     }
 }
