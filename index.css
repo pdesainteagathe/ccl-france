@@ -347,8 +347,26 @@ body {
 
 /* ===== SLIDER ===== */
 .slider-control {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
     position: relative;
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    background: transparent;
+    transition: background var(--transition-fast);
+}
+
+/* Alternance de couleurs de fond très subtiles */
+.slider-control:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.slider-control:nth-child(even) {
+    background: rgba(61, 79, 109, 0.03);
+}
+
+.slider-control:hover {
+    background: rgba(61, 79, 109, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .slider-label {
