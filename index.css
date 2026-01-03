@@ -983,14 +983,14 @@ input:checked+.toggle-slider:before {
     .mobile-instruction {
         display: block;
     }
-
-    /* Afficher le hint mobile */
-    .mobile-hint {
-        display: block;
-    }
 }
 
 @media (max-width: 768px) {
+
+    /* Ajouter du padding pour compenser le header WordPress fixe */
+    .main-content {
+        padding-top: calc(var(--spacing-xl) * 2);
+    }
 
     .page-title {
         font-size: var(--font-size-lg);
@@ -1002,6 +1002,11 @@ input:checked+.toggle-slider:before {
 
     .vote-button {
         min-width: 200px;
+    }
+
+    /* Afficher le hint mobile */
+    .mobile-hint {
+        display: block;
     }
 }
 
