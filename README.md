@@ -156,6 +156,51 @@ Une fonction puissance permet une **modulation douce et continue** de la redistr
 - **À 50%** : D1 reçoit 2.60× plus que la moyenne, D10 presque rien (0.3%)
 - **À 100%** : **Très progressive** : D1 reçoit 39.5%, D10 quasi rien (0.0%)
 
+##### Variantes de formules alternatives
+
+Bien que l'outil utilise actuellement une **loi de puissance** pour sa simplicité mathématique et sa continuité, il existe d'autres approches possibles pour moduler le bonus faibles revenus :
+
+**1. Fonction quadratique**
+```javascript
+Poids[décile] = 1 + ((11 - numéro_décile) / 10)² × (Pondération / 100) × 2
+```
+- **Caractéristique** : Compromis entre progressivité linéaire et exponentielle
+- **Effet** : Distribution plus douce que la puissance, ratio D1/D5 ≈ 1.7x à pondération 100%
+
+**2. Fonction sigmoïde**
+```javascript
+normalized = (numéro_décile - 1) / 9
+sigmoid = 1 / (1 + exp(10 × (normalized - 0.4)))
+Poids[décile] = 1 + sigmoid × (Pondération / 100) × 2
+```
+- **Caractéristique** : Transition douce avec concentration naturelle sur D1-D5
+- **Effet** : Répartition équilibrée sur les 5 premiers déciles, ratio D1/D5 ≈ 1.7x
+
+**3. Fonction par paliers (inspirée I4CE/Terra Nova)**
+```javascript
+paliers = [2.0, 1.8, 1.6, 1.4, 1.2, 1.0, 1.0, 1.0, 1.0, 1.0]  // D1 à D10
+Poids[décile] = 1 + (paliers[décile-1] - 1) × (Pondération / 100)
+```
+- **Caractéristique** : Basée sur les travaux empiriques de l'[étude I4CE & Terra Nova (2022)](https://www.i4ce.org/wp-content/uploads/2022/07/19-02-28-Etude-Climat_I4CE_Terra_Nova-1.pdf)
+- **Effet** : Distribution progressive par paliers (D1: +100%, D2: +80%, D3: +60%, D4: +40%, D5: +20%)
+
+**4. Fonction linéaire décroissante**
+```javascript
+Poids[décile] = 1 + (11 - numéro_décile) × (Pondération / 100)
+```
+- **Caractéristique** : La plus simple, distribution parfaitement linéaire
+- **Effet** : Progression douce et uniforme, ratio D1/D5 ≈ 1.6x
+
+**Choix de l'implémentation actuelle**
+
+Par **souci de simplicité et de lisibilité** de l'outil pédagogique, nous avons choisi de ne proposer qu'une seule formule testable (la loi de puissance) qui présente plusieurs avantages :
+- ✅ Mathématiquement **simple et compréhensible**
+- ✅ Permet une **modulation continue** via un seul paramètre
+- ✅ Évite les **effets de seuil** entre déciles
+- ✅ Couvre un **large spectre** de politiques redistributives (de l'uniforme au très progressif)
+
+Les formules alternatives mentionnées ci-dessus sont documentées à titre informatif et pourraient être implémentées dans des versions futures si un besoin de calibration plus fine émerge.
+
 ##### c) Application du bonus zones rurales
 
 Si le bonus rural est activé (> 0%), les poids sont ensuite ajustés :
