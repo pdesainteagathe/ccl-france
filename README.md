@@ -475,58 +475,6 @@ python3 -m http.server 8080
 # http://localhost:8080/index.html
 ```
 
-### Intégration WordPress
-
-Le calculateur peut être intégré dans WordPress via iframe ou comme page standalone :
-1. Le header a été retiré pour éviter les conflits
-2. Le bouton "Je vote" est en bas de la sidebar gauche
-3. Tous les styles sont encapsulés dans `index.css`
-
----
-
-## 📂 Structure du projet
-
-```
-ccl-france/
-├── index.html              # Page principale
-├── app.js                  # Logique de calcul et interactions
-├── index.css               # Styles
-├── logo-revenu-carbone.svg # Logo
-├── .gitignore              # Exclusions Git
-│
-├── data/                   # Données et analyses
-│   ├── README.md           # Guide du dossier data
-│   ├── BONUS_RURAL_DOCUMENTATION.md  # Doc technique bonus rural
-│   │
-│   ├── empreinte_carbone_pottier.csv # Données sources
-│   │
-│   ├── insee/              # Données INSEE
-│   │   ├── FET2021-D3.xlsx
-│   │   ├── deciles_par_territoire.json
-│   │   ├── rural_bonus_coefficients.json
-│   │   └── rural_bonus_code.js
-│   │
-│   └── *.py                # Scripts d'analyse Python
-│
-├── BONUS_RURAL_SUMMARY.md  # Résumé bonus rural
-└── README.md               # Ce fichier
-```
-
----
-
-## 📊 Résultats types
-
-### Exemple : Taxe à 100€, 70% revenu direct, bonus 50%/100%
-
-| Décile | Taxe payée | Redistribution | Impact net |
-|--------|-----------|----------------|------------|
-| **D1** | -750€     | +1,200€        | **+450€** ✅ |
-| **D5** | -1,020€   | +1,050€        | **+30€** ✅ |
-| **D10** | -1,830€   | +750€          | **-1,080€** 💸 |
-
-→ **Progressive** : Les déciles bas gagnent, les hauts déciles paient le coût net.
-
----
 
 ## 🔬 Validations et sources
 
