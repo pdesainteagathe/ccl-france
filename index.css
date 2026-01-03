@@ -156,6 +156,13 @@ body {
     padding: var(--spacing-xl);
 }
 
+/* Spacer pour compenser le header WordPress fixe */
+.header-spacer {
+    height: 60px;
+    /* Ajustez cette valeur selon la hauteur de votre header WordPress */
+    width: 100%;
+}
+
 .page-title {
     font-size: var(--font-size-xl);
     font-weight: 500;
@@ -986,11 +993,6 @@ input:checked+.toggle-slider:before {
 }
 
 @media (max-width: 768px) {
-
-    /* Ajouter du padding pour compenser le header WordPress fixe */
-    .main-content {
-        padding-top: calc(var(--spacing-xl) * 2);
-    }
 
     .page-title {
         font-size: var(--font-size-lg);
