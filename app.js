@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateSubsidyTotal = () => {
         const totalSubsidyAmountEl = document.getElementById('totalSubsidyAmount');
+        const subsidyGaugeFill = document.getElementById('subsidyGaugeFill');
         if (!totalSubsidyAmountEl) return;
 
         // Calculer les émissions totales (somme des émissions par décile)
@@ -209,6 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Afficher le montant
         totalSubsidyAmountEl.textContent = `(${subsidyAmount.toFixed(1)} Md€)`;
+
+        // Mettre à jour la jauge de progression
+        if (subsidyGaugeFill) {
+            subsidyGaugeFill.style.width = `${subsidyPercent}%`;
+        }
     };
 
     const updateAll = () => {
