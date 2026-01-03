@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== DATA CONFIGURATION =====
     const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
-    // Emissions moyennes par décile (en tonnes CO2/an) - Source: Pottier et al. (2020)
-    const baseEmissions = [14.6, 16.8, 17.7, 19.5, 21.2, 22.8, 23.5, 24.8, 25.9, 28.4];
+    // Emissions moyennes par décile (en tCO2e/ménage/an) - Source: Pottier et al. (2020) - OFCE, Graphique 1
+    // Lecture graphique: D1≈14.6, D2≈16.7, D3≈17.5, D4≈19.2, D5≈21.0, D6≈22.5, D7≈23.5, D8≈25.5, D9≈27.5, D10≈32.5
+    const baseEmissions = [14.6, 16.7, 17.5, 19.2, 21.0, 22.5, 23.5, 25.5, 27.5, 32.5];
 
     // ===== SUBSIDIES CONFIGURATION =====
     const subsidiesNames = [
