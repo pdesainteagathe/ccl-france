@@ -510,7 +510,10 @@ body {
     cursor: help;
     position: relative;
     margin-left: 6px;
-    z-index: 10000;
+}
+
+.help-icon:hover {
+    z-index: 100000;
 }
 
 .help-icon:hover::after {
