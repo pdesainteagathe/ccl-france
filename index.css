@@ -210,7 +210,7 @@ body {
 }
 
 .content-grid.has-right-sidebar {
-    grid-template-columns: 260px 1fr 340px;
+    grid-template-columns: 260px 1fr 310px;
 }
 
 /* ===== SIDEBARS ===== */
@@ -642,10 +642,10 @@ body {
 /* ===== COMPACT SLIDER (for right sidebar) ===== */
 .compact-slider-control {
     display: grid;
-    grid-template-columns: 1.8fr 1fr;
+    grid-template-columns: 2.2fr 1fr;
     /* Nom à gauche, curseur + pourcentage à droite */
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-xs);
     padding: var(--spacing-xs) 0;
 }
