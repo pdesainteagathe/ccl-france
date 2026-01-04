@@ -850,6 +850,8 @@ body {
 .legend-color {
     width: 16px;
     height: 16px;
+    display: inline-block;
+    vertical-align: middle;
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
 }
@@ -868,6 +870,20 @@ body {
 .legend-color-split span {
     flex: 1;
     height: 100%;
+}
+
+.legend-territories {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.legend-sub-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
 }
 
 .chart-label {
