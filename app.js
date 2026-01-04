@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Construire l'URL avec les paramètres
                 const params = new URLSearchParams(voteData);
-                const url = `https://script.google.com/macros/s/AKfycbztePuYwloLJrd5_hgQ259yauRE4BpjsTbHCvdpTi3Hnibu73j0IyycJbJL1AkEk9BcLQ/exec?${params.toString()}`;
+                const url = `https://script.google.com/macros/s/AKfycbxo25vWmWzY_8Upk6q11UO7ZrhxqIm2lEWGFlOkk1qB2R3ZbAkg0va2mAfTOOyA1iCf_A/exec?${params.toString()}`;
 
                 // Envoyer au Google Sheet via GET
                 const response = await fetch(url, {
