@@ -204,13 +204,13 @@ body {
 
 .content-grid {
     display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: var(--spacing-xl);
+    grid-template-columns: 230px 1fr;
+    gap: var(--spacing-lg);
     transition: grid-template-columns 0.4s ease;
 }
 
 .content-grid.has-right-sidebar {
-    grid-template-columns: 260px 1fr 310px;
+    grid-template-columns: 230px 1fr 280px;
 }
 
 /* ===== SIDEBARS ===== */
@@ -667,7 +667,7 @@ body {
 }
 
 .compact-slider-name {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 500;
     color: var(--color-text-primary);
     white-space: normal;
