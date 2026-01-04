@@ -34,12 +34,16 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
    - Pondération progressive pour favoriser les déciles bas
    - Basé sur une fonction puissance qui augmente le poids des déciles inférieurs
 
-4. **Bonus zones rurales** (0-200%)
-   - Compense le surcoût carbone (+50%) des ménages ruraux
-   - Basé sur données **INSEE FiLoSoFi 2017** et **ADEME**
-   - Les déciles bas (D1-D3) reçoivent jusqu'à **+16% à bonus 100%**
+4. **Bonus zones rurales** (0-100%)
+   - Compense la surprime carbone des ménages ruraux (+50% d'émissions moy.)
+   - Mécanisme : Transfert global uniformisé depuis les revenus des centres-villes
+   - Données : **Pottier et al. (2020)** (découpage Déciles x Ruralité)
 
-5. **Choix des subventions** (panel de droite)
+5. **Vue par ruralité** (Nouveau ✨)
+   - Permet d'éclater le graphique en 30 groupes (10 déciles x 3 territoires)
+   - Visualise précisément les transferts entre Rural, Banlieue et Centre
+
+6. **Choix des subventions** (panel de droite)
    - 15 catégories de subventions climatiques
    - Ajustement en temps réel pour maintenir 100% de répartition
 
@@ -59,9 +63,9 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
 **Usage** : Calcul des coefficients de compensation pour le bonus rural
 
 Observations clés :
-- Les déciles bas (D1-D3) sont plus présents en zones rurales (~33%)
-- Les zones rurales émettent +50% de CO2 (ADEME) malgré revenus plus faibles
-- Coefficient de compensation : 0.165 pour D1-D3, 0.074 pour D7-D10
+- Empreinte carbone détaillée par territoire (Rural, Banlieue, Centre) par décile.
+- Calibration : Le bonus 100% compense exactement la surprime de +50% de taxe moyenne en milieu rural.
+- Répartition population : Variable par décile (plus rurale en D1, plus urbaine en D10).
 
 ### Calculs
 
@@ -158,28 +162,31 @@ Par **souci de simplicité et de lisibilité** de l'outil pédagogique, nous avo
 
 Les formules alternatives mentionnées ci-dessus sont documentées à titre informatif et pourraient être implémentées dans des versions futures si un besoin de calibration plus fine émerge.
 
-##### c) Application du bonus zones rurales
+##### c) Application du bonus zones rurales (Transfert Global)
 
-Si le bonus rural est activé (> 0%), les poids sont ensuite ajustés :
+Le bonus rural fonctionne comme un transfert de redistribution "Zero-Sum" au niveau national.
+
+**Méthodologie** :
+1. **Cible** : Calcul de la surprime cible (+50% de la taxe moyenne nationale).
+2. **Prélèvement** : Une part homogène (même %) est prélevée sur la redistribution de tous les habitants des **Centres-villes**.
+3. **Distribution** : Ce montant est redistribué de manière **uniforme** (même montant en €/ménage) à tous les habitants **Ruraux**.
+4. **Neutre** : Les habitants des **Banlieues** ne sont pas impactés.
+
+Cette approche renforce mécaniquement la redistribution pro-pauvre car les ménages ruraux sont proportionnellement plus nombreux dans les premiers déciles.
+
+##### d) Vue par ruralité (30 groupes)
+
+L'application simule 30 populations distinctes basées sur les données de Pottier et al. (2020) :
+- **Rural** : Émissions les plus élevées, dépendance voiture.
+- **Banlieue** : Mixte, émissions intermédiaires.
+- **Centre** : Émissions les plus faibles, densité élevée, services.
+
+Le graphique agrégé par décile simple est la moyenne pondérée de ces 30 populations, utilisant des parts de population qui décroissent avec le revenu (35% rural à D1 → 15% à D10).
+
+##### e) Normalisation et impact final
 
 ```javascript
-if (Bonus_rural > 0) {
-    Poids[décile] *= (1 + Coef_rural[décile] × Bonus_rural/100)
-}
-```
-
-Voir section "[Bonus Zones Rurales](#-bonus-zones-rurales---méthodologie-détaillée)" pour le détail des coefficients.
-
-##### d) Normalisation et redistribution finale
-
-Les poids sont normalisés pour que leur somme = Part_directe, puis chaque décile reçoit sa part :
-
-```javascript
-// Normalisation
-Somme_poids = Σ Poids[tous les déciles]
-
-// Redistribution finale
-Redistribution[décile] = (Poids[décile] / Somme_poids) × Part_directe
+Impact_net = (Redistribution / Population) - Taxe_payée
 ```
 
 
@@ -202,226 +209,29 @@ Impact_net[décile] = Redistribution[décile] - Taxe[décile]
 
 ### Objectif
 
-Compenser le **surcoût carbone structurel** des ménages vivant en zones rurales et périurbaines, qui émettent davantage (transport + logement) malgré des revenus médians plus faibles et moins d'alternatives.
+Compenser le **surcoût carbone structurel** des ménages ruraux, qui émettent davantage (+50% en moyenne pour le transport et le logement) en raison de la dépendance à la voiture et de l'isolation thermique moindre des logements anciens.
 
 ### Sources de données
 
-#### 1. INSEE FiLoSoFi 2017 - Répartition territoriale des revenus
+#### 1. Pottier et al. (2020) - Étude OFCE
+Cette étude fournit les émissions moyennes par décile de niveau de vie, croisées avec le type de territoire (Rural, Banlieue, Centre). Ces données sont intégrées directement dans le calculateur pour simuler 30 groupes distincts.
 
-**Fichier source** : `FET2021-D3.xlsx` - Figure 2  
-**URL** : https://www.insee.fr/fr/statistiques/fichier/5039989/FET2021-D3.xlsx
+#### 2. Répartition de la population par décile
+Comme les données croisées de population (Nb ménages x Décile x Territoire) ne sont pas publiques, nous utilisons une distribution estimée calibrée sur les travaux de l'INSEE :
+- **Rural** : Plus représenté dans les bas revenus (35% en D1) que dans les hauts revenus (15% en D10).
+- **Centre** : Plus représenté dans les hauts revenus (45% en D10) que dans les bas revenus (28% en D1).
 
-**Contenu** : Déciles de niveau de vie (D1, Médiane, D9) par taille d'aires d'attraction des villes.
+### Mécanisme de Transfert Global
 
-**11 catégories territoriales analysées** :
-| Catégorie | Type | Médiane (€) | Coefficient de ruralité |
-|-----------|------|-------------|-------------------------|
-| Aire de Paris | Pôle | 22,884 | 0.0 (très urbain) |
-| Aire de Paris | Couronne | 23,708 | 0.2 (périurbain) |
-| Grandes métropoles (>700k hab) | Pôle | 20,774 | 0.0 |
-| Grandes métropoles | Couronne | 23,031 | 0.2 |
-| Villes moyennes (200-700k) | Pôle | 19,702 | 0.1 |
-| Villes moyennes | Couronne | 21,937 | 0.3 |
-| Villes moyennes (50-200k) | Pôle | 18,927 | 0.2 |
-| Villes moyennes | Couronne | 21,051 | 0.4 |
-| Petites villes (<50k) | Pôle | 19,301  | 0.4 |
-| Petites villes | Couronne | 20,355 | 0.6 (rural) |
-| **Communes hors d'attraction** | — | **19,773** | **0.9 (très rural)** |
+Contrairement aux versions précédentes, le bonus rural n'est pas un calcul local par décile, mais un **transfert de solidarité nationale** :
 
-**Observation clé** : Les zones rurales ont un niveau de vie médian **plus faible** (19,773€ vs 22,884€ à Paris) mais le D1 (10% plus pauvres) y est **plus élevé** (11,237€ rural vs 10,483€ Paris), indiquant **moins d'inégalités** en zones rurales.
-
-#### 2. ADEME - Différentiels d'émissions par territoire
-
-**Sources compilées** :
-1. **ADEME/CGDD** - Études sur l'empreinte carbone territoriale
-2. **Pottier et al. (2020)** - "Répartition de l'empreinte carbone des Français"
-3. **Grand Lyon (2021)** - Analyse empreinte carbone urbain/rural/périurbain
-
-**Différentiels mesurés** :
-
-| Poste | Rural vs Urbain | Périurbain vs Urbain | Source |
-|-------|-----------------|----------------------|--------|
-| **Chauffage** | **+86%** (2.6t vs 1.4t CO2e/hab/an) | +71% (2.4t) | Grand Lyon 2021 |
-| **Transport** | **+60%** (estimé, dépendance voiture) | +45% | ADEME études mobilité |
-| **Biens & services** | -15% (moins de consommation) | -5% | Pottier 2020 |
-
-**Calcul de la moyenne pondérée (+50%)** :
-
-La surprime globale de **+50%** est calculée en pondérant les différentiels par la part de chaque poste dans l'empreinte totale :
-
-```
-Empreinte totale moyenne (France) ≈ 10 t CO2e/hab/an
-
-Répartition par poste :
-- Transport : 25% = 2.5t
-- Logement (dont chauffage) : 18% = 1.8t
-- Alimentation : 23% = 2.3t (pas de différence urbain/rural significative)
-- Biens & services : 34% = 3.4t
-
-Différentiel rural :
-- Transport : +60% × 2.5t = +1.5t
-- Chauffage : +86% × 1.8t = +1.55t
-- Biens & services : -15% × 3.4t = -0.51t
-- Alimentation : 0% (identique)
-
-Total différentiel = +1.5 + 1.55 - 0.51 = +2.54t
-Surprime en % = 2.54 / 10 × (1-0.25) ≈ +50% des émissions directes modulables
-```
-
-**Note** : Le +50% s'applique aux émissions **directes et modulables** (transport + logement), qui représentent 43% de l'empreinte totale. Les émissions indirectes (alimentation, services) varient moins selon le territoire.
-
-### Calcul des coefficients par décile
-
-#### Étape 1 : Estimation de la répartition géographique par décile
-
-Faute de données croisées **décile × ruralité** publiées par l'INSEE, nous avons estimé la proportion de ménages ruraux/périurbains/urbains pour chaque décile en croisant :
-1. Les données de revenus par territoire (FiLoSoFi)
-2. Les statistiques de pauvreté rurale/urbaine (INSEE)
-3. Les observations sur la concentration des hauts revenus dans les grandes métropoles
-
-**Distribution estimée** :
-
-| Décile | % Rural | % Périurbain | % Urbain | Justification |
-|--------|---------|--------------|----------|---------------|
-| D1 | 35% | 30% | 35% | Surreprésentation de la pauvreté rurale |
-| D2 | 32% | 32% | 36% | Idem |
-| D3 | 30% | 33% | 37% | |
-| D4 | 28% | 34% | 38% | Transition vers distribution équilibrée |
-| D5 | 25% | 35% | 40% | Médiane nationale |
-| D6 | 22% | 35% | 43% | |
-| D7 | 20% | 34% | 46% | Concentration progressive en urbain |
-| D8 | 18% | 32% | 50% | |
-| D9 | 15% | 30% | 55% | Hauts revenus concentrés en métropoles |
-| D10 | 12% | 25% | 63% | Très forte concentration urbaine |
-
-#### Étape 2 : Calcul du coefficient moyen de ruralité par décile
-
-Pour chaque décile, on calcule un **coefficient de ruralité moyen** qui reflète la répartition de sa population entre zones urbaines, périurbaines et rurales :
-
-```
-Coef_ruralité[décile] = (
-    %_rural × 0.9 +        // Coefficient rural = 0.9
-    %_périurb × 0.35 +     // Coefficient périurbain = 0.35 (moyenne)
-    %_urbain × 0.0         // Coefficient urbain = 0  (référence)
-) / 100
-```
-
-**Exemple pour D1** :
-```
-Coef_ruralité[D1] = (35% × 0.9 + 30% × 0.35 + 35% × 0.0) / 100
-                  = (31.5 + 10.5 + 0) / 100
-                  = 0.42 / 100
-                  = 0.329 ≈ 33%
-```
-
-**Résultats** :
-
-| Décile | Coef. de ruralité moyen | Arrondi utilisé |
-|--------|--------------------------|-----------------|
-| D1-D3 | 0.329 | **0.33** (33% rural en moyenne) |
-| D4-D6 | 0.247 | **0.25** (25% rural) |
-| D7-D10 | 0.148 | **0.15** (15% rural) |
-
-#### Étape 3 : Coefficient de compensation final
-
-```
-Coefficient_compensation[décile] = Coef_ruralité[décile] × Surprime_ADEME
-
-Avec Surprime_ADEME = 0.50 (+50% d'émissions)
-```
-
-**Résultats finaux** :
-
-| Décile | Coefficient | Compensation à bonus 100% |
-|--------|-------------|---------------------------|
-| D1-D3 | 0.33 × 0.50 = **0.165** | **+16.5%** de redistribution |
-| D4-D6 | 0.25 × 0.50 = **0.124** | **+12.4%** |
-| D7-D10 | 0.15 × 0.50 = **0.074** | **+7.4%** |
-
-### Application dans le code
-
-```javascript
-// Coefficients de compensation pour bonus zones rurales
-// Source: INSEE FiLoSoFi 2017 + ADEME empreinte carbone territoriale
-const ruralCompensationCoefficients = [
-    0.165, 0.165, 0.165,  // D1-D3: +16.4% à bonus 100%
-    0.124, 0.124, 0.124,  // D4-D6: +12.4%
-    0.074, 0.074, 0.074, 0.074  // D7-D10: +7.4%
-];
-
-// Dans calculateRedistribution()
-if (state.bonusPercent > 0) {
-    weights = weights.map((w, i) => {
-        const ruralBonus = ruralCompensationCoefficients[i] * (state.bonusPercent / 100);
-        return w * (1 + ruralBonus);
-    });
-}
-```
-
-### Justification et limites
-
-#### ⚠️ Limites assumées
-
-1. **Approximation de la distribution** : Pas de données croisées décile × ruralité publiées par l'INSEE → estimation basée sur observations indirectes
-2. **Surprime uniforme** : En réalité, le +50% varie selon le décile (les hauts revenus ruraux ont plus d'alternatives), mais données détaillées non disponibles
-3. **Moyenne nationale** : Pas de prise en compte des variations régionales (Nord vs Sud, montagne vs plaine)
-4. **Comportements constants** : Ne prend pas en compte les changements de comportement induits par la taxe
-
-#### 🔄 Améliorations futures
-
-Si l'INSEE publie des données croisées **décile × ruralité**, les coefficients pourront être affinés avec des données réelles au lieu d'estimations.
+1. **Calcul du prélèvement** : On prélève un pourcentage homogène sur la redistribution destinée à tous les habitants des **Centres-villes**.
+2. **Impact pour les citadins** : Une réduction de leur "chèque vert" pour financer la solidarité territoriale.
+3. **Calcul du bonus** : Le montant total prélevé est distribué de manière **uniforme** (même montant pour tous) à chaque ménage **Rural**.
+4. **Calibration** : Le curseur est réglé pour que le bonus 100% compense exactement la surprime carbone de +50% calculée sur l'émission moyenne nationale.
+5. **Effet redistributif pro-pauvre** : Comme les ruraux sont plus nombreux dans les déciles bas, ces déciles voient leur redistribution moyenne augmenter globalement (effet visible sur le graphique principal).
 
 ---
-
-## 🗳️ Système de vote
-
-### Anonymat garanti
-
-Les votes sont **100% anonymes** :
-- ✅ Aucune donnée personnelle collectée
-- ✅ Pas d'adresse IP enregistrée
-- ✅ Pas de cookies de tracking
-
-### Données enregistrées
-
-Lors d'un vote, seuls les **paramètres de configuration** sont sauvegardés :
-```json
-{
-  "timestamp": "2025-12-25T22:00:00Z",
-  "carbonPrice": 100,
-  "redistributionPercent": 70,
-  "ponderationPercent": 50,
-  "bonusPercent": 100,
-  "subsidy_0_name": "Pompe à chaleur",
-  "subsidy_0_percent": 15,
-  // ... autres subventions
-}
-```
-
-**Utilisation** : Statistiques agrégées pour identifier les scénarios préférés des citoyens.
-
----
-
-## 🚀 Installation et utilisation
-
-### Prérequis
-- Navigateur web moderne (Chrome, Firefox, Safari, Edge)
-- Serveur HTTP (pour développement local)
-
-### Lancement local
-
-```bash
-# Cloner le repository
-git clone https://github.com/votre-org/ccl-france.git
-cd ccl-france
-
-# Lancer un serveur HTTP
-python3 -m http.server 8080
-
-# Ouvrir dans le navigateur
-# http://localhost:8080/index.html
-```
-
 
 ## 🔬 Validations et sources
 
@@ -429,32 +239,15 @@ python3 -m http.server 8080
 
 1. **Pottier et al. (2020)**  
    *Répartition de l'empreinte carbone des Français*  
-   CGDD - Ministère de la Transition écologique
+   OFCE / CGDD - Analyse détaillée par décile et territoire.
 
-2. **INSEE FiLoSoFi 2017**  
-   *Déciles de niveau de vie par territoire*  
-   https://www.insee.fr/fr/statistiques/5039989
+2. **INSEE**  
+   *Les niveaux de vie par territoire*  
+   Données sur la concentration de la pauvreté rurale et la richesse urbaine.
 
 3. **ADEME**  
-   *Empreinte carbone des ménages par territoire*  
-   Base Carbone® et études territoriales
-
-4. **Grand Lyon (2021)**  
-   *Analyse empreinte carbone urbain/rural*
-
-### Hypothèses et limites
-
-⚠️ **Approximations** :
-- Distribution urbain/rural par décile estimée (pas de données croisées directes)
-- Élasticité-prix non prise en compte (comportements constants)
-- Données nationales moyennes (pas de variations régionales)
-
-✅ **Points forts** :
-- Données officielles INSEE et ADEME
-- Méthodologie documentée et reproductible
-- Calculs transparents et open source
-
----
+   *Empreinte carbone territoriale*  
+   Données sur les surconsommations de carburant et de fioul en ruralité.
 
 ## 🤝 Contribution
 

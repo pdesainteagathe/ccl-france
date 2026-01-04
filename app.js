@@ -62,9 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== DATA GENERATION =====
     const calculateData = (state) => {
         const territories = ['rural', 'banlieue', 'centre'];
-        const bonus = state.bonusPercent / 100;
 
-        // 1. Calcul pour les 30 groupes (Décile x Territoire)
+        // 1. Calcul des métriques globales pour le bonus rural
+        const avgOverallEmissions = baseEmissions.reduce((a, b) => a + b, 0) / 10;
+        const avgOverallTax = avgOverallEmissions * state.carbonPrice;
+        const targetRuralBonusPerHH = 0.5 * avgOverallTax; // +50% surprime cible
+
+        // 2. Passage initial : Calcul des bases pour les 30 groupes avec populations variables par décile
         let groupResults = [];
         let totalCollected = 0;
 
@@ -72,23 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const decileNum = d + 1;
             const baseW = Math.pow(11 - decileNum, state.ponderationPercent / 25);
 
+            // Définir des parts de population variables par décile (plus rural en bas, plus centre en haut)
+            // Estimation calibrée pour coller aux BaseEmissions (Rural: ~35%->15%, Centre: ~28%->45%)
+            let p_r = 0.35 - (d * 0.022); // 35% à D1, ~15% à D10
+            let p_c = 0.28 + (d * 0.017); // 28% à D1, ~45% à D10
+            let p_b = 1 - p_r - p_c;
+
+            const dPop = { rural: p_r, banlieue: p_b, centre: p_c };
+
             territories.forEach(t => {
-                const pop = popShares[t];
+                const pop = dPop[t];
                 const emission = emissionsByTerritory[t][d];
                 const tax = emission * state.carbonPrice;
-
-                // Calcul du poids avec transfert Centre -> Rural
-                let w = baseW;
-                if (t === 'rural') w = baseW * (1 + bonus);
-                if (t === 'centre') w = baseW * (1 - bonus * (popShares.rural / popShares.centre));
-                // Banlieue reste à baseW
 
                 groupResults.push({
                     decile: decileNum,
                     territory: t,
                     pop: pop,
                     tax: tax,
-                    weight: w * pop // Poids total du groupe (poids unitaire * population)
+                    baseWeight: baseW * pop
                 });
 
                 totalCollected += tax * pop;
@@ -96,11 +102,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const totalToRedistribute = totalCollected * (state.redistributionPercent / 100);
-        const totalWeight = groupResults.reduce((sum, g) => sum + g.weight, 0);
+        const totalBaseWeight = groupResults.reduce((sum, g) => sum + g.baseWeight, 0);
 
-        // 2. Calcul de la redistribution par groupe
+        // Redistribution de base (sans bonus rural)
         groupResults.forEach(g => {
-            g.redistribution = (g.weight / totalWeight) * totalToRedistribute;
+            g.baseRedistribution = (g.baseWeight / totalBaseWeight) * totalToRedistribute;
+        });
+
+        // 3. Application du transfert Global (Centre -> Rural)
+        const totalRuralPop = groupResults.filter(g => g.territory === 'rural').reduce((sum, g) => sum + g.pop, 0);
+        const targetTotalTransfer = targetRuralBonusPerHH * totalRuralPop;
+        const actualTotalTransfer = (state.bonusPercent / 100) * targetTotalTransfer;
+
+        const totalCentreRedistribution = groupResults
+            .filter(g => g.territory === 'centre')
+            .reduce((sum, g) => sum + g.baseRedistribution, 0);
+
+        // Calcul du pourcentage de perte homogène pour le Centre
+        const centerLossFactor = totalCentreRedistribution > 0 ? Math.min(1, actualTotalTransfer / totalCentreRedistribution) : 0;
+        const effectiveTransfer = centerLossFactor * totalCentreRedistribution;
+        const ruralGainPerHH = totalRuralPop > 0 ? effectiveTransfer / totalRuralPop : 0;
+
+        // 4. Calcul final des redistributions et impacts
+        groupResults.forEach(g => {
+            if (g.territory === 'centre') {
+                g.redistribution = g.baseRedistribution * (1 - centerLossFactor);
+            } else if (g.territory === 'rural') {
+                g.redistribution = g.baseRedistribution + (ruralGainPerHH * g.pop);
+            } else {
+                g.redistribution = g.baseRedistribution;
+            }
+
             g.netImpact = (g.redistribution / g.pop) - g.tax;
             g.taxCost = -g.tax;
         });
