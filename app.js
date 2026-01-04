@@ -5,6 +5,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Emissions moyennes par décile (en tCO2e/ménage/an) - Source: Pottier et al. (2020) - OFCE, Graphique 1
     const baseEmissions = [14.6, 16.7, 17.5, 19.2, 21.0, 22.5, 23.5, 25.5, 27.5, 32.5];
 
+    // Parts de population par territoire (France entière)
+    const popShares = {
+        rural: 0.23,
+        banlieue: 0.44,
+        centre: 0.33
+    };
+
+    // Emissions par territoire - Source: Pottier et al. (2020) - OFCE, Graphique 1(b)
+    const emissionsByTerritory = {
+        rural: [17.5, 18.0, 20.0, 21.5, 24.5, 26.5, 26.5, 28.5, 30.5, 33.5],
+        banlieue: [15.5, 16.5, 16.5, 18.5, 19.5, 22.0, 23.0, 25.5, 29.5, 35.0],
+        centre: [11.5, 14.5, 15.5, 16.5, 17.0, 17.0, 19.5, 22.0, 22.5, 30.0]
+    };
+
     // ===== SUBSIDIES CONFIGURATION =====
     const subsidiesNames = [
         "Pompe à chaleur",
@@ -31,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         redistributionPercent: 100,
         ponderationPercent: 0,
         bonusPercent: 0,
+        viewByTerritory: false,
         subsidies: subsidiesNames.map((name, i) => ({
             id: `sub_${i}`,
             name: name,
@@ -46,39 +61,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== DATA GENERATION =====
     const calculateData = (state) => {
-        // 1. Calcul de la taxe payée par décile
-        const taxPaid = baseEmissions.map(e => e * state.carbonPrice);
-        const totalCollected = taxPaid.reduce((a, b) => a + b, 0);
+        const territories = ['rural', 'banlieue', 'centre'];
 
-        // 2. Montant total à redistribuer (Revenu Direct)
-        // state.redistributionPercent représente ici la part "Revenu Direct"
+        // 1. Calcul des métriques globales pour le bonus rural
+        const avgOverallEmissions = baseEmissions.reduce((a, b) => a + b, 0) / 10;
+        const avgOverallTax = avgOverallEmissions * state.carbonPrice;
+        const targetRuralBonusPerHH = 0.5 * avgOverallTax; // +50% surprime cible
+
+        // 2. Passage initial : Calcul des bases pour les 30 groupes avec populations variables par décile
+        let groupResults = [];
+        let totalCollected = 0;
+
+        for (let d = 0; d < 10; d++) {
+            const decileNum = d + 1;
+            const baseW = Math.pow(11 - decileNum, state.ponderationPercent / 25);
+
+            // Définir des parts de population variables par décile (plus rural en bas, plus centre en haut)
+            // Estimation calibrée pour coller aux BaseEmissions (Rural: ~35%->15%, Centre: ~28%->45%)
+            let p_r = 0.35 - (d * 0.022); // 35% à D1, ~15% à D10
+            let p_c = 0.28 + (d * 0.017); // 28% à D1, ~45% à D10
+            let p_b = 1 - p_r - p_c;
+
+            const dPop = { rural: p_r, banlieue: p_b, centre: p_c };
+
+            territories.forEach(t => {
+                const pop = dPop[t];
+                const emission = emissionsByTerritory[t][d];
+                const tax = emission * state.carbonPrice;
+
+                groupResults.push({
+                    decile: decileNum,
+                    territory: t,
+                    pop: pop,
+                    tax: tax,
+                    baseWeight: baseW * pop
+                });
+
+                totalCollected += tax * pop;
+            });
+        }
+
         const totalToRedistribute = totalCollected * (state.redistributionPercent / 100);
+        const totalBaseWeight = groupResults.reduce((sum, g) => sum + g.baseWeight, 0);
 
-        // 3. Calcul des poids pour la redistribution (Revenu Direct)
-        // Coeff de ruralité : décroissant par décile (hyp: plus rural en bas de l'échelle)
-        const ruralityScores = [1.3, 1.2, 1.1, 1.05, 1.0, 0.95, 0.9, 0.85, 0.8, 0.75];
-
-        let weights = deciles.map((_, i) => {
-            const decileNum = i + 1;
-            // Poids de base (1) modulé par la pondération faible revenus (puissance)
-            let w = Math.pow(11 - decileNum, state.ponderationPercent / 25);
-
-            // Modulation par le bonus rural (linéaire et moins prononcé que la pondération)
-            const rFactor = 1 + (ruralityScores[i] - 1) * (state.bonusPercent / 100);
-            return w * rFactor;
+        // Redistribution de base (sans bonus rural)
+        groupResults.forEach(g => {
+            g.baseRedistribution = (g.baseWeight / totalBaseWeight) * totalToRedistribute;
         });
 
-        const totalWeight = weights.reduce((a, b) => a + b, 0);
-        let redistribution = weights.map(w => (w / totalWeight) * totalToRedistribute);
+        // 3. Application du transfert Global (Centre -> Rural)
+        const totalRuralPop = groupResults.filter(g => g.territory === 'rural').reduce((sum, g) => sum + g.pop, 0);
+        const targetTotalTransfer = targetRuralBonusPerHH * totalRuralPop;
+        const actualTotalTransfer = (state.bonusPercent / 100) * targetTotalTransfer;
 
-        // 4. Calcul du Net (Redistribution - Taxe)
-        const netTransfer = redistribution.map((r, i) => r - taxPaid[i]);
+        const totalCentreRedistribution = groupResults
+            .filter(g => g.territory === 'centre')
+            .reduce((sum, g) => sum + g.baseRedistribution, 0);
 
-        return {
-            labels: deciles,
-            taxCost: taxPaid.map(v => -v),
-            netImpact: netTransfer
-        };
+        // Calcul du pourcentage de perte homogène pour le Centre
+        const centerLossFactor = totalCentreRedistribution > 0 ? Math.min(1, actualTotalTransfer / totalCentreRedistribution) : 0;
+        const effectiveTransfer = centerLossFactor * totalCentreRedistribution;
+        const ruralGainPerHH = totalRuralPop > 0 ? effectiveTransfer / totalRuralPop : 0;
+
+        // 4. Calcul final des redistributions et impacts
+        groupResults.forEach(g => {
+            if (g.territory === 'centre') {
+                g.redistribution = g.baseRedistribution * (1 - centerLossFactor);
+            } else if (g.territory === 'rural') {
+                g.redistribution = g.baseRedistribution + (ruralGainPerHH * g.pop);
+            } else {
+                g.redistribution = g.baseRedistribution;
+            }
+
+            g.netImpact = (g.redistribution / g.pop) - g.tax;
+            g.taxCost = -g.tax;
+        });
+
+        // 3. Agrégation selon le mode de vue
+        if (state.viewByTerritory) {
+            return {
+                labels: groupResults.map(g => `D${g.decile} ${g.territory[0].toUpperCase()}`),
+                taxCost: groupResults.map(g => g.taxCost),
+                netImpact: groupResults.map(g => g.netImpact),
+                isTerritoryView: true
+            };
+        } else {
+            // Vue par décile (moyenne pondérée)
+            const decileData = deciles.map(d => {
+                const groups = groupResults.filter(g => g.decile == d);
+                const avgTax = groups.reduce((sum, g) => sum + g.tax * g.pop, 0); // popShares sum to 1 per decile
+                const avgNet = groups.reduce((sum, g) => sum + g.netImpact * g.pop, 0);
+                return { tax: -avgTax, net: avgNet };
+            });
+
+            return {
+                labels: deciles,
+                taxCost: decileData.map(d => d.tax),
+                netImpact: decileData.map(d => d.net),
+                isTerritoryView: false
+            };
+        }
     };
 
     // ===== CHART RENDERING =====
@@ -98,85 +180,116 @@ document.addEventListener('DOMContentLoaded', () => {
         const padding = { top: 40, right: 30, bottom: 60, left: 60 };
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
+        const isMobile = width < 500;
+
+        // Mise à jour de la légende
+        const legendItem = document.getElementById('redistributionLegend');
+        if (legendItem) {
+            if (data.isTerritoryView) {
+                legendItem.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.85em;">Coût après redistribution :</span>
+                        <div class="legend-territories">
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #10b981;"></span> Rural</span>
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #f59e0b;"></span> Banlieue</span>
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #3b82f6;"></span> Centre</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                legendItem.innerHTML = `
+                    <span class="legend-color-split">
+                        <span style="background: #34d399;"></span>
+                        <span style="background: #f87171;"></span>
+                    </span>
+                    <span>Coût après redistribution</span>
+                `;
+            }
+        }
 
         ctx.clearRect(0, 0, width, height);
 
-        // Finding min/max for scale
+        // 1. Calcul de l'échelle dynamique
         const allValues = [...data.taxCost, ...data.netImpact];
-        let maxValue = Math.max(...allValues, 100);
-        let minValue = Math.min(...allValues, -100);
-        const margin = (maxValue - minValue) * 0.15;
-        maxValue += margin;
-        minValue -= margin;
+        const maxValue = Math.max(...allValues, 1000);
+        const minValue = Math.min(...allValues, -4000);
         const range = maxValue - minValue;
 
         const getY = (val) => padding.top + chartHeight - ((val - minValue) / range) * chartHeight;
         const zeroY = getY(0);
 
-        // Draw Grid
-        ctx.strokeStyle = '#e1e8ed';
+        // 2. Dessiner les axes et la grille
+        ctx.beginPath();
+        ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#5a6c7d';
-        ctx.font = '11px Inter, sans-serif';
-
-        const step = 500;
-        for (let v = Math.floor(minValue / step) * step; v <= maxValue; v += step) {
-            const y = getY(v);
-            ctx.beginPath();
+        for (let i = -4000; i <= maxValue; i += 500) {
+            const y = getY(i);
             ctx.moveTo(padding.left, y);
             ctx.lineTo(padding.left + chartWidth, y);
-            ctx.stroke();
-            ctx.fillText(v + ' €', padding.left - 10, y + 4);
         }
+        ctx.stroke();
 
-        // Zero Line
-        ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = 2;
+        // Axe Zero
         ctx.beginPath();
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
         ctx.moveTo(padding.left, zeroY);
         ctx.lineTo(padding.left + chartWidth, zeroY);
         ctx.stroke();
 
-        // Draw Bars
-        const barWidth = (chartWidth / 10) * 0.7;
-        const groupWidth = chartWidth / 10;
-        const isMobile = width < 500; // Déplacé ici pour être accessible partout
+        // 3. Dessiner les barres
+        const nBars = data.labels.length;
+        const barWidth = (chartWidth / nBars) * 0.75;
+        const gap = (chartWidth / nBars) * 0.25;
 
         data.labels.forEach((label, i) => {
-            const x = padding.left + i * groupWidth + (groupWidth - barWidth) / 2;
+            const x = padding.left + i * (barWidth + gap) + gap / 2;
 
-            const taxY = getY(data.taxCost[i]);
-            ctx.fillStyle = 'rgba(74, 144, 226, 0.25)'; // Bleu clair
-            ctx.fillRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
-
-            // Bordure pointillée pour les barres de taxe
-            ctx.strokeStyle = '#4a90e2'; // Bleu
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 3]); // Pointillés : 5px de trait, 3px d'espace
-            ctx.strokeRect(x, Math.min(zeroY, taxY), barWidth, Math.abs(taxY - zeroY));
-            ctx.setLineDash([]); // Réinitialiser pour les autres éléments
-
-            const netY = getY(data.netImpact[i]);
-            ctx.fillStyle = data.netImpact[i] >= 0 ? '#4CAF50' : '#e74c3c'; // Vert pour positif, rouge pour négatif
-            ctx.fillRect(x, Math.min(zeroY, netY), barWidth, Math.abs(netY - zeroY));
-
-            // Affichage du pourcentage à droite de la barre
-            if (data.percentages) {
-                const percentage = data.percentages[i];
-                const percentText = (percentage >= 0 ? '+' : '') + percentage.toFixed(1) + '%';
-                ctx.fillStyle = percentage >= 0 ? '#4CAF50' : '#e74c3c';
-                ctx.textAlign = 'left';
-                ctx.font = '10px Inter, sans-serif';
-                ctx.fillText(percentText, x + barWidth + 5, netY - 2);
+            // Couleurs basées sur le territoire
+            let barColor = '#34d399'; // default green
+            if (data.isTerritoryView) {
+                const territory = label.split(' ')[1];
+                if (territory === 'R') barColor = '#10b981'; // Rural green
+                if (territory === 'B') barColor = '#f59e0b'; // Banlieue orange
+                if (territory === 'C') barColor = '#3b82f6'; // Centre blue
+            } else {
+                barColor = data.netImpact[i] >= 0 ? '#34d399' : '#f87171';
             }
 
-            ctx.fillStyle = '#2c3e50';
-            ctx.textAlign = 'center';
-            // Utiliser isMobile déclaré avant le forEach
-            ctx.font = isMobile ? '9px Inter, sans-serif' : '12px Inter, sans-serif';
-            ctx.fillText('D' + label, x + barWidth / 2, height - padding.bottom + 25);
+            // A. Barre Coût Taxe (Pointillés/Hachuré)
+            const taxY = getY(data.taxCost[i]);
+            const taxH = Math.abs(taxY - zeroY);
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = data.isTerritoryView ? 'rgba(100, 116, 139, 0.4)' : 'rgba(59, 130, 246, 0.5)';
+            ctx.strokeRect(x, zeroY, barWidth, taxH);
+            ctx.fillStyle = data.isTerritoryView ? 'rgba(0,0,0,0.03)' : 'rgba(59, 130, 246, 0.05)';
+            ctx.fillRect(x, zeroY, barWidth, taxH);
+            ctx.setLineDash([]);
+
+            // B. Barre Impact Net (Pleine)
+            const netY = getY(data.netImpact[i]);
+            const netH = Math.abs(netY - zeroY);
+            ctx.fillStyle = barColor;
+            ctx.fillRect(x, Math.min(zeroY, netY), barWidth, netH);
+
+            // C. Labels X
+            if (!data.isTerritoryView || (i % 3 === 1)) {
+                ctx.fillStyle = '#64748b';
+                ctx.font = '12px Inter';
+                ctx.textAlign = 'center';
+                const labelX = x + barWidth / 2;
+                const displayText = data.isTerritoryView ? `D${Math.floor(i / 3) + 1}` : label;
+                ctx.fillText(displayText, labelX, height - padding.bottom + 25);
+            }
         });
+
+        // 4. Légende Y
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Inter';
+        ctx.textAlign = 'right';
+        for (let i = -4000; i <= maxValue; i += 1000) {
+            ctx.fillText(i + ' €', padding.left - 10, getY(i) + 4);
+        }
 
         ctx.font = isMobile ? 'bold 10px Inter, sans-serif' : 'bold 12px Inter, sans-serif';
         ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
@@ -421,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = parseInt(redistributionSlider.value);
             state.redistributionPercent = val;
             subsidiesPercent.textContent = `Sub. ${100 - val}%`;
-            revenuePercent.textContent = `Revenu ${val}%`;
+            revenuePercent.textContent = `Revenu ${redistributionSlider.value}%`;
             updateAll();
         };
 
@@ -441,6 +554,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupSlider('bonusSlider', 'bonusValue', 'bonusPercent');
+
+    // Add event listeners for bonus slider and territory view checkbox
+    document.getElementById('bonusSlider').addEventListener('input', (e) => {
+        state.bonusPercent = parseInt(e.target.value);
+        updateAll();
+    });
+
+    document.getElementById('territoryViewCheckbox').addEventListener('change', (e) => {
+        state.viewByTerritory = e.target.checked;
+        updateAll();
+    });
 
     // Initialize Subsidies UI
     console.log('[INIT] About to call initSubsidiesUI');

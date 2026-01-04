@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css?v=1002">
+    <link rel="stylesheet" href="index.css?v=1005">
 </head>
 
 <body>
@@ -70,19 +70,19 @@
                         <div class="slider-control">
                             <div class="slider-label">
                                 <span>Bonus zones rurales <span class="help-icon"
-                                        data-tooltip="Compense le surcoût carbone des ménages vivant en zones rurales et périurbaines. Les ménages ruraux émettent en moyenne +50% de CO2 (transport et logement) malgré des revenus médians plus faibles, et ont moins d'alternatives (dépendance à la voiture, logements anciens). Les déciles bas (D1-D3), plus présents en zones rurales, reçoivent jusqu'à +16% de redistribution à bonus 100%. Basé sur données INSEE FiLoSoFi 2017 et ADEME.">?</span></span>
+                                        data-tooltip="Compense le surcoût carbone des ménages ruraux (+50% d'émissions en moyenne). Le mécanisme effectue un transfert global depuis la redistribution des habitants des centres-villes (perte homogène) vers les habitants ruraux (gain uniforme par ménage). Comme les ménages ruraux sont plus nombreux dans les bas déciles, ce bonus renforce l'aspect redistributif pro-pauvre. Données : Pottier et al. (2020).">?</span></span>
                             </div>
                             <input type="range" class="slider" id="bonusSlider" min="0" max="100" value="0">
                             <div class="slider-track-fill" id="bonusTrackFill"></div>
 
-                            <!-- DÉSACTIVÉ POUR LA VERSION DE PRODUCTION - Voir branche dev pour vue ruralité
+
                             <div class="territory-view-checkbox">
                                 <label>
                                     <input type="checkbox" id="territoryViewCheckbox">
                                     <span>Vue par ruralité (Rural / Banlieue / Centre)</span>
                                 </label>
                             </div>
-                            -->
+
                         </div>
                     </div>
 
@@ -105,11 +105,8 @@
                             style="background: rgba(74, 144, 226, 0.25); border: 2px dashed #4a90e2;"></span>
                         <span>Coût de la taxe carbone</span>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color-split">
-                            <span style="background: #4CAF50;"></span>
-                            <span style="background: #e74c3c;"></span>
-                        </span>
+                    <div class="legend-item" id="redistributionLegend">
+                        <span class="legend-color" style="background: #34d399;"></span>
                         <span>Coût après redistribution</span>
                     </div>
                 </div>
@@ -145,8 +142,7 @@
             </aside>
         </div>
     </main>
-
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=20"></script>
 </body>
 
 </html>
