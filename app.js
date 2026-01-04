@@ -3,8 +3,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
     // Emissions moyennes par décile (en tCO2e/ménage/an) - Source: Pottier et al. (2020) - OFCE, Graphique 1
-    // Lecture graphique: D1≈14.6, D2≈16.7, D3≈17.5, D4≈19.2, D5≈21.0, D6≈22.5, D7≈23.5, D8≈25.5, D9≈27.5, D10≈32.5
     const baseEmissions = [14.6, 16.7, 17.5, 19.2, 21.0, 22.5, 23.5, 25.5, 27.5, 32.5];
+
+    // Emissions par décile et par type de territoire - Source: Pottier et al. (2020) - OFCE, Graphique 1(b)
+    // Données extraites du graphique "Moyenne par décile de niveau de vie et par localisation"
+    const emissionsByTerritory = {
+        rural: [17.5, 18.0, 20.0, 21.5, 24.5, 26.5, 26.5, 28.5, 30.5, 33.5],
+        banlieue: [15.5, 16.5, 16.5, 18.5, 19.5, 22.0, 23.0, 25.5, 29.5, 35.0],
+        centre: [11.5, 14.5, 15.5, 16.5, 17.0, 17.0, 19.5, 22.0, 22.5, 30.0]
+    };
+
+    // Coefficients de compensation pour bonus zones rurales - DONNÉES RÉELLES Pottier 2020
+    // Calculés comme: (Émissions_rural - Émissions_centre) / Émissions_moyenne
+    // Ces coefficients reflètent le VRAI surcoût carbone mesuré pour les ménages ruraux de chaque décile
+    const ruralCompensationCoefficients = [
+        0.411,  // D1: (17.5 - 11.5) / 14.6 = +41.1% surcoût rural vs centre
+        0.210,  // D2: (18.0 - 14.5) / 16.7 = +21.0%
+        0.257,  // D3: (20.0 - 15.5) / 17.5 = +25.7%
+        0.260,  // D4: (21.5 - 16.5) / 19.2 = +26.0%
+        0.357,  // D5: (24.5 - 17.0) / 21.0 = +35.7%
+        0.422,  // D6: (26.5 - 17.0) / 22.5 = +42.2% ⭐ Maximum
+        0.298,  // D7: (26.5 - 19.5) / 23.5 = +29.8%
+        0.255,  // D8: (28.5 - 22.0) / 25.5 = +25.5%
+        0.291,  // D9: (30.5 - 22.5) / 27.5 = +29.1%
+        0.108   // D10: (33.5 - 30.0) / 32.5 = +10.8%
+    ];
 
     // ===== SUBSIDIES CONFIGURATION =====
     const subsidiesNames = [
@@ -15,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "Trains (Intercités/TER)",
         "Rénovation thermique",
         "Énergies renouvelables",
+        "Énergie nucléaire",
         "Car express régionaux",
         "Fret ferroviaire",
         "Installation de bornes de recharge",
@@ -31,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         redistributionPercent: 100,
         ponderationPercent: 0,
         bonusPercent: 0,
+        viewByTerritory: false,  // Nouvelle option pour vue splittée par ruralité
         subsidies: subsidiesNames.map((name, i) => ({
             id: `sub_${i}`,
             name: name,
@@ -62,18 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Les déciles bas (D1-D3) sont plus présents en zones rurales (+16.4% à bonus 100%)
         // Les déciles moyens (D4-D6) sont équilibrés (+12.4%)
         // Les déciles hauts (D7-D10) sont concentrés en zones urbaines (+7.4%)
-        const ruralCompensationCoefficients = [
-            0.165, 0.165, 0.165,  // D1-D3: +16.4% compensation à bonus 100%
-            0.124, 0.124, 0.124,  // D4-D6: +12.4%
-            0.074, 0.074, 0.074, 0.074  // D7-D10: +7.4%
-        ];
-
         let weights = deciles.map((_, i) => {
             const decileNum = i + 1;
             // Poids de base (1) modulé par la pondération faibles revenus (puissance)
             let w = Math.pow(11 - decileNum, state.ponderationPercent / 25);
 
-            // Modulation par le bonus rural (proportionnel au coefficient INSEE/ADEME)
+            // Modulation par le bonus rural (proportionnel aux données réelles Pottier 2020)
             const ruralBonus = ruralCompensationCoefficients[i] * (state.bonusPercent / 100);
             return w * (1 + ruralBonus);
         });
