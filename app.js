@@ -638,5 +638,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ===== EXPORT FUNCTIONALITY =====
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const data = calculateData(state);
+            const header = data.isTerritoryView ?
+                ["Décile", "Territoire", "Coût Taxe Carbone (€)", "Impact Net (€)"] :
+                ["Décile", "Coût Taxe Carbone (€)", "Impact Net (€)"];
+
+            const rows = [header];
+
+            data.labels.forEach((label, i) => {
+                if (data.isTerritoryView) {
+                    const parts = label.split(' ');
+                    const decile = parts[0];
+                    const territoryMap = { 'R': 'Rural', 'B': 'Banlieue', 'C': 'Centre' };
+                    const territory = territoryMap[parts[1]] || parts[1];
+                    rows.push([decile, territory, data.taxCost[i], data.netImpact[i]]);
+                } else {
+                    rows.push([label, data.taxCost[i], data.netImpact[i]]);
+                }
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Données Simulation");
+
+            // Format filename with current date, time and view type
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.getHours().toString().padStart(2, '0') + 'h' + now.getMinutes().toString().padStart(2, '0');
+            const viewType = data.isTerritoryView ? "territoire" : "decile";
+            const filename = `ccl_france_${viewType}_${dateStr}_${timeStr}.xlsx`;
+
+            // Use the built-in SheetJS writeFile method which is highly compatible
+            XLSX.writeFile(workbook, filename);
+        });
+    }
+
     console.log('Simulation initialisée avec 12 subventions et logique de balance.');
 });
