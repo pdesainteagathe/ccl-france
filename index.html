@@ -32,8 +32,11 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Prix de la taxe carbone <span class="help-icon"
-                                        data-tooltip="On suppose ici une taxe carbone qui couvre tous les usages d'énergie fossile, accompagnée d'un ajustement aux frontières équivalent pour les importations.">?</span></span>
+                                <span>Prix d'une taxe carbone
+                                    <small class="slider-label-subtext">(théorique) couvrant toutes les émissions <span
+                                            class="help-icon"
+                                            data-tooltip="On suppose ici une taxe carbone qui couvre toutes les émissions de gaz à effet de serre, accompagnée d'un ajustement aux frontières équivalent pour les importations. Cette couverture est théorique mais est la couverture vers laquelle nous deons tendre ; on peut donc raisonner sur l'usage des recettes sur cette base. Une version restreinte au logement et transport est à l'étude.">?</span></small>
+                                </span>
                             </div>
                             <div class="slider-wrapper">
                                 <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100"
@@ -59,10 +62,8 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Bonus faibles revenus <span class="help-icon" data-tooltip="Avec une redistribution uniforme, les bas déciles de revenus sont déjà gagnants, car ils émettent moins en moyenne que les hauts déciles. Néanmoins, on peut vouloir accentuer cette répartition avec un bonus 'faibles revenus'
-                                        . Plus ce bonus est élevé, plus les ménages à faibles revenus reçoivent une part
-                                        importante de la redistribution. Le calcul utilise une pondération progressive
-                                        qui favorise les déciles inférieurs.">?</span></span>
+                                <span>Bonus bas revenus <span class="help-icon"
+                                        data-tooltip="Avec une redistribution uniforme, les bas déciles de revenus sont déjà gagnants, car ils émettent moins en moyenne que les hauts déciles. Néanmoins, on peut vouloir accentuer cette répartition avec un bonus 'bas revenus'. Plus ce bonus est élevé, plus les ménages à bas revenus reçoivent une part importante de la redistribution. Le calcul utilise une pondération progressive qui favorise les déciles inférieurs.">?</span></span>
                             </div>
                             <input type="range" class="slider" id="ponderationSlider" min="0" max="100" value="0">
                             <div class="slider-track-fill" id="ponderationTrackFill"></div>
