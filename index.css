@@ -412,7 +412,15 @@ body {
 .slider-label>span {
     flex: 1;
     word-wrap: break-word;
-    line-height: 1.4;
+    line-height: normal;
+}
+
+.slider-label-subtext {
+    display: block;
+    font-size: 0.82em;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    margin-top: 2px;
 }
 
 .slider-value {
