@@ -32,12 +32,24 @@
 
                         <div class="slider-control">
                             <div class="slider-label">
-                                <span>Prix d'une taxe carbone
-                                    <small class="slider-label-subtext">(théorique) couvrant toutes les émissions <span
-                                            class="help-icon"
-                                            data-tooltip="On suppose ici une taxe carbone qui couvre toutes les émissions de gaz à effet de serre, accompagnée d'un ajustement aux frontières équivalent pour les importations. Cette couverture est théorique mais est la couverture vers laquelle nous devons tendre ; on peut donc raisonner sur l'usage des recettes à partir de cette base. Une version restreinte au logement et transport est à l'étude.">?</span></small>
-                                </span>
+                                <span>Prix d'une taxe carbone</span>
                             </div>
+
+                            <div class="scope-selection" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 4px;">
+                                <div class="territory-view-checkbox" style="margin-top: 0; padding-top: 0; border-top: none;">
+                                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                        <input type="radio" name="scopeType" id="fullScopeRadio" checked style="margin-top: 2px;">
+                                        <span>Couvrant toutes les émissions (théorique)</span>
+                                    </label>
+                                </div>
+                                <div class="territory-view-checkbox" style="margin-top: 0; padding-top: 0; border-top: none;">
+                                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                        <input type="radio" name="scopeType" id="restrictedScopeRadio" style="margin-top: 2px;">
+                                        <span>Transport routier et logement uniquement</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div class="slider-wrapper">
                                 <input type="range" class="slider" id="carbonPriceSlider" min="45" max="300" value="100"
                                     data-value="100">

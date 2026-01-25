@@ -19,6 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
         centre: [11.5, 14.5, 15.5, 16.5, 17.0, 17.0, 19.5, 22.0, 22.5, 30.0]
     };
 
+    // Emissions scope restreint (transport hors avion + logement) - Source: extraction graphiques
+    const restrictedBaseEmissions = [2.4, 2.9, 3.4, 3.8, 3.8, 4.0, 3.9, 4.5, 4.9, 5.7];
+    
+    const restrictedEmissionsByTerritory = {
+        rural: [2.9, 3.5, 4.3, 4.4, 4.5, 5.6, 6.3, 5.7, 5.2, 7.6],
+        banlieue: [2.1, 3.0, 4.0, 4.2, 4.4, 4.7, 3.9, 6.0, 6.6, 7.8],
+        centre: [2.1, 2.0, 1.9, 2.7, 2.5, 2.2, 2.5, 2.5, 3.1, 3.0]
+    };
+
     // ===== SUBSIDIES CONFIGURATION =====
     const subsidiesNames = [
         "Pompe à chaleur",
@@ -46,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ponderationPercent: 0,
         bonusPercent: 0,
         viewByTerritory: false,
+        restrictedScope: false,
         subsidies: subsidiesNames.map((name, i) => ({
             id: `sub_${i}`,
             name: name,
@@ -63,8 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const calculateData = (state) => {
         const territories = ['rural', 'banlieue', 'centre'];
 
+        // Sélection des données d'émissions en fonction du scope
+        const currentBaseEmissions = state.restrictedScope ? restrictedBaseEmissions : baseEmissions;
+        const currentEmissionsByTerritory = state.restrictedScope ? restrictedEmissionsByTerritory : emissionsByTerritory;
+
         // 1. Calcul des métriques globales pour le bonus rural
-        const avgOverallEmissions = baseEmissions.reduce((a, b) => a + b, 0) / 10;
+        const avgOverallEmissions = currentBaseEmissions.reduce((a, b) => a + b, 0) / 10;
         const avgOverallTax = avgOverallEmissions * state.carbonPrice;
         const targetRuralBonusPerHH = 0.5 * avgOverallTax; // +50% surprime cible
 
@@ -86,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             territories.forEach(t => {
                 const pop = dPop[t];
-                const emission = emissionsByTerritory[t][d];
+                const emission = currentEmissionsByTerritory[t][d];
                 const tax = emission * state.carbonPrice;
 
                 groupResults.push({
@@ -211,8 +225,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Calcul de l'échelle dynamique
         const allValues = [...data.taxCost, ...data.netImpact];
-        const maxValue = Math.max(...allValues, 1000);
-        const minValue = Math.min(...allValues, -4000);
+        let maxVal = Math.max(...allValues);
+        let minVal = Math.min(...allValues);
+
+        // Garantir un minimum de visibilité et inclure 0
+        maxVal = Math.max(maxVal, 200);
+        minVal = Math.min(minVal, -500);
+
+        // Déterminer un pas "propre" pour la grille (200, 500, ou 1000)
+        const rawRange = maxVal - minVal;
+        let step = 500;
+        if (rawRange <= 2000) step = 200;
+        if (rawRange > 5000) step = 1000;
+
+        const maxValue = Math.ceil(maxVal / step) * step;
+        const minValue = Math.floor(minVal / step) * step;
         const range = maxValue - minValue;
 
         const getY = (val) => padding.top + chartHeight - ((val - minValue) / range) * chartHeight;
@@ -222,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
-        for (let i = -4000; i <= maxValue; i += 500) {
+        for (let i = minValue; i <= maxValue; i += step) {
             const y = getY(i);
             ctx.moveTo(padding.left, y);
             ctx.lineTo(padding.left + chartWidth, y);
@@ -238,6 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
 
         // 3. Dessiner les barres
+        // ... (reste du code identique)
+
         const nBars = data.labels.length;
         const barWidth = (chartWidth / nBars) * 0.75;
         const gap = (chartWidth / nBars) * 0.25;
@@ -287,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#64748b';
         ctx.font = '11px Inter';
         ctx.textAlign = 'right';
-        for (let i = -4000; i <= maxValue; i += 1000) {
+        for (let i = minValue; i <= maxValue; i += step) {
             ctx.fillText(i + ' €', padding.left - 10, getY(i) + 4);
         }
 
@@ -300,8 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const gaugeFill = document.getElementById('subsidyGaugeFill');
         if (!totalSubsidyAmountEl) return;
 
+        // Sélection des données d'émissions en fonction du scope
+        const currentBaseEmissions = state.restrictedScope ? restrictedBaseEmissions : baseEmissions;
+
         // Calculer les émissions totales (somme des émissions par décile)
-        const totalEmissions = baseEmissions.reduce((a, b) => a + b, 0);
+        const totalEmissions = currentBaseEmissions.reduce((a, b) => a + b, 0);
 
         // Calculer le montant total collecté
         const totalCollected = totalEmissions * state.carbonPrice;
@@ -564,6 +596,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('territoryViewCheckbox').addEventListener('change', (e) => {
         state.viewByTerritory = e.target.checked;
         updateAll();
+    });
+
+    document.getElementById('fullScopeRadio').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            state.restrictedScope = false;
+            updateAll();
+        }
+    });
+
+    document.getElementById('restrictedScopeRadio').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            state.restrictedScope = true;
+            updateAll();
+        }
     });
 
     // Initialize Subsidies UI
