@@ -54,7 +54,7 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
 ### Sources de données
 
 #### 1. Empreinte carbone par décile
-**Source** : [Pottier et al. (2020)](https://www.ofce.sciences-po.fr/pdf/revue/3-169OFCE.pdf) - CGDD/ADEME  
+**Source** : [Pottier et al. (2020)](https://faere.fr/pub/WorkingPapers/Pottier_Combet_Cayla_Lauretis_Nadaud_FAERE_WP2020.15.pdf) 
 **Données** : `data/empreinte_carbone_pottier.csv`
 
 
