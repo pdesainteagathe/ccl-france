@@ -35,16 +35,23 @@
                                 <span>Prix d'une taxe carbone</span>
                             </div>
 
-                            <div class="scope-selection" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 4px;">
-                                <div class="territory-view-checkbox" style="margin-top: 0; padding-top: 0; border-top: none;">
-                                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
-                                        <input type="radio" name="scopeType" id="fullScopeRadio" checked style="margin-top: 2px;">
+                            <div class="scope-selection"
+                                style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 4px;">
+                                <div class="territory-view-checkbox"
+                                    style="margin-top: 0; padding-top: 0; border-top: none;">
+                                    <label
+                                        style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                        <input type="radio" name="scopeType" id="fullScopeRadio" checked
+                                            style="margin-top: 2px;">
                                         <span>Couvrant toutes les émissions (théorique)</span>
                                     </label>
                                 </div>
-                                <div class="territory-view-checkbox" style="margin-top: 0; padding-top: 0; border-top: none;">
-                                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
-                                        <input type="radio" name="scopeType" id="restrictedScopeRadio" style="margin-top: 2px;">
+                                <div class="territory-view-checkbox"
+                                    style="margin-top: 0; padding-top: 0; border-top: none;">
+                                    <label
+                                        style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                        <input type="radio" name="scopeType" id="restrictedScopeRadio"
+                                            style="margin-top: 2px;">
                                         <span>Transport routier et logement uniquement</span>
                                     </label>
                                 </div>
@@ -61,7 +68,7 @@
                         <div class="slider-control">
                             <div class="slider-label">
                                 <span>Usage des recettes : revenu direct ou subventions ? <span class="help-icon"
-                                        data-tooltip="Une fois les recettes de la taxe carbone collectée, on peut décider du meilleur usage de cet argent. On peut le diviser par le nombre de citoyens et redistribuer à chacun une part (c'est le revenu carbone) ou bien financer des subventions vertes (voir panneau subventions), ou encore mixer les deux options.">?</span></span>
+                                        data-tooltip="Une fois les recettes de la taxe carbone collectée, on peut décider du meilleur usage de cet argent. On peut le diviser par le nombre de citoyens et redistribuer à chacun une part (c'est le revenu carbone) ou bien financer des subventions vertes (voir panneau subventions), ou encore mixer les deux options. Ici, pour des raisons de données disponibles, nous modélisons une redistribution uniforme par ménages et non par citoyen, mais le mécanisme s'applique très bien par citoyen ou par résident dans le pays.">?</span></span>
                             </div>
                             <div class="slider-percentages">
                                 <span class="slider-percent-left" id="subsidiesPercent">Sub. 0%</span>
