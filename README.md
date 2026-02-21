@@ -81,7 +81,7 @@ Taxe[décile] = Empreinte_carbone[décile] × Prix_carbone
 Émissions_moyennes = Σ(Émissions[décile]) / 10
 Total_collecté = Émissions_moyennes × Prix_carbone × 30 000 000 ménages
 ```
-*Note : Le calcul se base sur 30 millions de ménages français pour donner une estimation de l'enveloppe budgétaire nationale.*
+*Note : Le calcul se base sur 30 millions de ménages français pour donner une estimation de l'enveloppe budgétaire nationale. De plus, il ne modélise que les recettes collectées auprès des particuliers, et non les recettes collectées auprès des entreprises ou du secteur tertiaire.*
 
 #### 3. Redistribution directe (Revenu Direct)
 
