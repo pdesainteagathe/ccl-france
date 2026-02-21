@@ -557,12 +557,14 @@ body {
 }
 
 /* Tooltip du prix carbone: afficher en dessous au lieu d'en dessus */
-.slider-label:first-child .help-icon:hover::after {
+.slider-label .help-icon:hover::after,
+.chart-label .help-icon:hover::after {
     bottom: auto;
     top: calc(100% + 8px);
 }
 
-.slider-label:first-child .help-icon:hover::before {
+.slider-label .help-icon:hover::before,
+.chart-label .help-icon:hover::before {
     bottom: auto;
     top: calc(100% + 2px);
     border-top-color: transparent;
