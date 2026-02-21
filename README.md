@@ -57,6 +57,8 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
 **Source** : [Pottier et al. (2020)](https://faere.fr/pub/WorkingPapers/Pottier_Combet_Cayla_Lauretis_Nadaud_FAERE_WP2020.15.pdf) 
 **Données** : `data/empreinte_carbone_pottier.csv`
 
+> **Note sur le périmètre** : Le modèle se base sur les émissions **directes** des ménages (chauffage et carburant). Les revenus affichés correspondent à la part de la taxe carbone collectée directement auprès des particuliers (environ 5,3 Mds € pour le scope transport+logement à 45€/t), et n'incluent pas les recettes collectées auprès des entreprises ou du secteur tertiaire.
+
 
 #### 2. Répartition territoriale
 **Source** : INSEE FiLoSoFi 2017  
@@ -74,10 +76,12 @@ Observations clés :
 Taxe[décile] = Empreinte_carbone[décile] × Prix_carbone
 ```
 
-#### 2. Montant total collecté
+#### 2. Montant total collecté (Échelle Nationale)
 ```javascript
-Total_collecté = Σ(Taxe[décile] × Nombre_ménages[décile])
+Émissions_moyennes = Σ(Émissions[décile]) / 10
+Total_collecté = Émissions_moyennes × Prix_carbone × 30 000 000 ménages
 ```
+*Note : Le calcul se base sur 30 millions de ménages français pour donner une estimation de l'enveloppe budgétaire nationale.*
 
 #### 3. Redistribution directe (Revenu Direct)
 
@@ -88,9 +92,9 @@ Cette étape détermine comment le revenu direct est réparti entre les déciles
 Part_directe = Total_collecté × (Redistribution% / 100)
 ```
 
-**Exemple** : Si la taxe collecte 50 milliards d'€ et que 70% vont vers le revenu direct :
+**Exemple** : Si la taxe collecte au total **5,3 milliards d'€** (cas du scope restreint à 45€/t) et que 70% vont vers le revenu direct :
 ```
-Part_directe = 50 Mds€ × 0.70 = 35 Mds€ à redistribuer
+Part_directe = 5,3 Mds€ × 0.70 = 3,71 Mds€ à redistribuer
 ```
 
 ##### b) Calcul des poids avec bonus faibles revenus
@@ -298,5 +302,5 @@ Contact : [contact@ccl-france.org](mailto:contact@ccl-france.org)
 
 ---
 
-**Version** : 1.0  
-**Dernière mise à jour** : 25 décembre 2025
+**Version** : 1.1  
+**Dernière mise à jour** : 21 février 2026

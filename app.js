@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Emissions scope restreint (transport hors avion + logement) - Source: extraction graphiques
     const restrictedBaseEmissions = [2.4, 2.9, 3.4, 3.8, 3.8, 4.0, 3.9, 4.5, 4.9, 5.7];
-    
+
     const restrictedEmissionsByTerritory = {
         rural: [2.9, 3.5, 4.3, 4.4, 4.5, 5.6, 6.3, 5.7, 5.2, 7.6],
         banlieue: [2.1, 3.0, 4.0, 4.2, 4.4, 4.7, 3.9, 6.0, 6.6, 7.8],
@@ -332,17 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sélection des données d'émissions en fonction du scope
         const currentBaseEmissions = state.restrictedScope ? restrictedBaseEmissions : baseEmissions;
 
-        // Calculer les émissions totales (somme des émissions par décile)
-        const totalEmissions = currentBaseEmissions.reduce((a, b) => a + b, 0);
+        // Calculer les émissions totales moyennes par ménage (moyenne des 10 déciles)
+        const avgEmissionsPerHH = currentBaseEmissions.reduce((a, b) => a + b, 0) / 10;
 
-        // Calculer le montant total collecté
-        const totalCollected = totalEmissions * state.carbonPrice;
+        // Calculer le montant total collecté à l'échelle nationale (30 millions de ménages en France)
+        const totalNationalCollected = avgEmissionsPerHH * state.carbonPrice * 30000000;
 
         // Calculer la part de subventions (100 - redistributionPercent)
         const subsidyPercent = 100 - state.redistributionPercent;
 
         // Calculer le montant des subventions en milliards d'euros
-        const subsidyAmount = (totalCollected * subsidyPercent / 100) / 1000; // Division par 1000 pour convertir en milliards
+        const subsidyAmount = (totalNationalCollected * subsidyPercent / 100) / 1000000000; // Division par 10^9 pour convertir en milliards
 
         // Afficher le montant
         totalSubsidyAmountEl.textContent = `(${subsidyAmount.toFixed(1)} Md€)`;
