@@ -204,13 +204,13 @@ body {
 
 .content-grid {
     display: grid;
-    grid-template-columns: 230px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: var(--spacing-lg);
     transition: grid-template-columns 0.4s ease;
 }
 
 .content-grid.has-right-sidebar {
-    grid-template-columns: 230px 1fr 280px;
+    grid-template-columns: 280px 1fr 280px;
 }
 
 /* ===== SIDEBARS ===== */
