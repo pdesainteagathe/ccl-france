@@ -29,24 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===== SUBSIDIES CONFIGURATION =====
-    const subsidiesNames = [
-        "Pompe à chaleur",
-        "Géothermie",
-        "Voiture électrique",
-        "Vélo électrique",
-        "Trains (Intercités/TER)",
-        "Rénovation thermique",
-        "Énergies renouvelables",
-        "Énergie nucléaire",
-        "Car express régionaux",
-        "Fret ferroviaire",
-        "Installation de bornes de recharge",
-        "Prix des recharges",
-        "Agriculture durable",
-        "Industrie décarbonée",
-        "Fillière bois énergie",
-        "Autres"
-    ];
+    // Canonical (French) names — sent to the spreadsheet so vote data stays
+    // language-agnostic. Display names come from translations.js per locale.
+    const subsidiesNames = (typeof translations !== 'undefined' && translations.fr && Array.isArray(translations.fr.subsidies))
+        ? translations.fr.subsidies
+        : [];
+
+    const getSubsidyDisplayName = (index) =>
+        (typeof window.t === 'function' && Array.isArray(window.t('subsidies')) && window.t('subsidies')[index])
+        || subsidiesNames[index]
+        || '';
 
     // ===== STATE & UPDATES =====
     let state = {
@@ -197,16 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = width < 500;
 
         // Mise à jour de la légende
+        const tx = (key, fallback) => (typeof window.t === 'function') ? window.t(key) : fallback;
         const legendItem = document.getElementById('redistributionLegend');
         if (legendItem) {
             if (data.isTerritoryView) {
                 legendItem.innerHTML = `
                     <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-                        <span style="font-weight: 600; font-size: 0.85em;">Coût après redistribution :</span>
+                        <span style="font-weight: 600; font-size: 0.85em;">${tx('legend_after_colon', 'Coût après redistribution :')}</span>
                         <div class="legend-territories">
-                            <span class="legend-sub-item"><span class="legend-color" style="background: #10b981;"></span> Rural</span>
-                            <span class="legend-sub-item"><span class="legend-color" style="background: #f59e0b;"></span> Banlieue</span>
-                            <span class="legend-sub-item"><span class="legend-color" style="background: #3b82f6;"></span> Centre</span>
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #10b981;"></span> ${tx('territory_rural', 'Rural')}</span>
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #f59e0b;"></span> ${tx('territory_banlieue', 'Banlieue')}</span>
+                            <span class="legend-sub-item"><span class="legend-color" style="background: #3b82f6;"></span> ${tx('territory_centre', 'Centre')}</span>
                         </div>
                     </div>
                 `;
@@ -216,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="background: #34d399;"></span>
                         <span style="background: #f87171;"></span>
                     </span>
-                    <span>Coût après redistribution</span>
+                    <span>${tx('legend_after', 'Coût après redistribution')}</span>
                 `;
             }
         }
@@ -321,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         ctx.font = isMobile ? 'bold 10px Inter, sans-serif' : 'bold 12px Inter, sans-serif';
-        ctx.fillText('Déciles de niveau de vie', padding.left + chartWidth / 2, height - 10);
+        ctx.fillText(tx('chart_axis_decile', 'Déciles de niveau de vie'), padding.left + chartWidth / 2, height - 10);
     };
 
     const updateSubsidyTotal = () => {
@@ -428,10 +421,11 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
 
         state.subsidies.forEach((sub, index) => {
+            const displayName = getSubsidyDisplayName(index);
             const control = document.createElement('div');
             control.className = 'compact-slider-control';
             control.innerHTML = `
-                <div class="compact-slider-name" title="${sub.name}">${sub.name}</div>
+                <div class="compact-slider-name" data-subsidy-index="${index}" title="${displayName}">${displayName}</div>
                 <div class="compact-slider-wrapper">
                     <input type="range" class="compact-slider" id="${sub.id}" min="0" max="100" value="${sub.percent}">
                     <span class="compact-slider-percentage" id="${sub.id}-percent">${sub.percent}%</span>
@@ -561,19 +555,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const subsidiesPercent = document.getElementById('subsidiesPercent');
     const revenuePercent = document.getElementById('revenuePercent');
 
+    const refreshRedistributionLabels = () => {
+        if (!redistributionSlider || !subsidiesPercent || !revenuePercent) return;
+        const val = parseInt(redistributionSlider.value);
+        const subPrefix = (typeof window.t === 'function') ? window.t('sub_prefix') : 'Sub.';
+        const revPrefix = (typeof window.t === 'function') ? window.t('rev_prefix') : 'Revenu';
+        subsidiesPercent.textContent = `${subPrefix} ${100 - val}%`;
+        revenuePercent.textContent = `${revPrefix} ${val}%`;
+    };
+
     if (redistributionSlider && subsidiesPercent && revenuePercent) {
         const updateRedistribution = () => {
-            const val = parseInt(redistributionSlider.value);
-            state.redistributionPercent = val;
-            subsidiesPercent.textContent = `Sub. ${100 - val}%`;
-            revenuePercent.textContent = `Revenu ${redistributionSlider.value}%`;
+            state.redistributionPercent = parseInt(redistributionSlider.value);
+            refreshRedistributionLabels();
             updateAll();
         };
 
         redistributionSlider.addEventListener('input', updateRedistribution);
         // Initialisation
-        subsidiesPercent.textContent = `Sub. ${100 - redistributionSlider.value}%`;
-        revenuePercent.textContent = `Revenu ${redistributionSlider.value}%`;
+        refreshRedistributionLabels();
     }
 
     // Slider de pondération (sans affichage de valeur, utilise l'icône d'aide)
@@ -624,16 +624,47 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAll();
     });
 
+    // Lorsqu'on change de langue : rafraîchir les libellés des subventions,
+    // les préfixes du curseur de redistribution, et redessiner le graphique
+    // (légende + étiquette d'axe). Les éléments avec data-i18n sont gérés par i18n.js.
+    document.addEventListener('langchange', () => {
+        document.querySelectorAll('[data-subsidy-index]').forEach(el => {
+            const idx = parseInt(el.getAttribute('data-subsidy-index'), 10);
+            const displayName = getSubsidyDisplayName(idx);
+            el.textContent = displayName;
+            el.setAttribute('title', displayName);
+        });
+        refreshRedistributionLabels();
+        updateAll();
+    });
+
     // ===== VOTE FUNCTIONALITY =====
     const voteBtn = document.getElementById('voteBtn');
+    const tt = (key, fallback) => (typeof window.t === 'function') ? window.t(key) : fallback;
+
+    const setVoteButtonHTML = (mainKey, subKey, mainFallback, subFallback) => {
+        if (!voteBtn) return;
+        voteBtn.innerHTML =
+            `<span class="vote-text-main" data-i18n="${mainKey}">${tt(mainKey, mainFallback)}</span>` +
+            `<span class="vote-text-sub" data-i18n="${subKey}">${tt(subKey, subFallback)}</span>`;
+    };
+
+    const resetVoteButton = () => {
+        setVoteButtonHTML('vote_main', 'vote_sub', 'Je vote', 'pour cette redistribution');
+        voteBtn.style.background = '';
+        voteBtn.disabled = false;
+    };
+
     if (voteBtn) {
         voteBtn.addEventListener('click', async () => {
             // Désactiver le bouton pendant l'envoi
             voteBtn.disabled = true;
-            voteBtn.textContent = 'Envoi...';
+            voteBtn.textContent = tt('vote_sending', 'Envoi...');
 
             try {
-                // Préparer les données de vote
+                // Préparer les données de vote — on envoie les noms FR canoniques
+                // pour que les données du Google Sheet restent stables quelle que
+                // soit la langue choisie par l'utilisateur.
                 const voteData = {
                     timestamp: new Date().toISOString(),
                     carbonPrice: state.carbonPrice,
@@ -642,9 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     bonusPercent: state.bonusPercent,
                 };
 
-                // Ajouter chaque subvention comme paramètre séparé
                 state.subsidies.forEach((sub, index) => {
-                    voteData[`subsidy_${index}_name`] = sub.name;
+                    voteData[`subsidy_${index}_name`] = subsidiesNames[index] || sub.name;
                     voteData[`subsidy_${index}_percent`] = Math.round(sub.percent);
                 });
 
@@ -653,33 +683,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const url = `https://script.google.com/macros/s/AKfycbyNBdPzROMkhnNCCCWfkaOJVFwgBKsRwXe3dYIwOD36tVl77hDgSoT32mCYxJIkkpo_Iw/exec?${params.toString()}`;
 
                 // Envoyer au Google Sheet via GET
-                const response = await fetch(url, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                });
+                await fetch(url, { method: 'GET', mode: 'no-cors' });
 
                 // Succès (no-cors ne permet pas de lire la réponse, mais si pas d'erreur = succès)
-                voteBtn.innerHTML = '<span class="vote-text-main">✓ Vote enregistré !</span><span class="vote-text-sub">Merci pour votre participation</span>';
+                setVoteButtonHTML('vote_success_main', 'vote_success_sub',
+                    '✓ Vote enregistré !', 'Merci pour votre participation');
                 voteBtn.style.background = '#4CAF50';
 
-                // Réactiver après 3 secondes
-                setTimeout(() => {
-                    voteBtn.innerHTML = '<span class="vote-text-main">Je vote</span><span class="vote-text-sub">pour cette redistribution</span>';
-                    voteBtn.style.background = '';
-                    voteBtn.disabled = false;
-                }, 3000);
+                setTimeout(resetVoteButton, 3000);
 
             } catch (error) {
                 console.error('Erreur lors de l\'envoi du vote:', error);
-                voteBtn.innerHTML = '<span class="vote-text-main">⚠ Erreur</span><span class="vote-text-sub">Réessayez</span>';
+                setVoteButtonHTML('vote_error_main', 'vote_error_sub', '⚠ Erreur', 'Réessayez');
                 voteBtn.style.background = '#e74c3c';
 
-                // Réactiver après 3 secondes
-                setTimeout(() => {
-                    voteBtn.innerHTML = '<span class="vote-text-main">Je vote</span><span class="vote-text-sub">pour cette redistribution</span>';
-                    voteBtn.style.background = '';
-                    voteBtn.disabled = false;
-                }, 3000);
+                setTimeout(resetVoteButton, 3000);
             }
         });
     }
