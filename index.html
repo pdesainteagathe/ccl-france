@@ -112,6 +112,28 @@
                             <div class="slider-track-fill" id="redistributionTrackFill"></div>
                         </div>
 
+                        <div class="slider-control" id="modalityControl">
+                            <div class="slider-label">
+                                <span><span data-i18n="modality_label">Versement du revenu carbone</span> <span class="help-icon" data-i18n-tooltip="modality_tooltip"
+                                        data-tooltip="Le revenu carbone peut être versé par virement automatique sur le compte bancaire de chaque ménage, ou déduit de sa facture d'électricité. Dans ce simulateur, le montant reçu est le même dans les deux cas : seule la modalité de versement change.">?</span></span>
+                            </div>
+                            <div class="scope-selection"
+                                style="display: flex; flex-direction: column; gap: 4px;">
+                                <label
+                                    style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                    <input type="radio" name="modalityType" id="modalityTransferRadio" value="virement" checked
+                                        style="margin-top: 2px;">
+                                    <span data-i18n="modality_transfer">Virement automatique</span>
+                                </label>
+                                <label
+                                    style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.7em; color: #64748b;">
+                                    <input type="radio" name="modalityType" id="modalityBillRadio" value="facture_electricite"
+                                        style="margin-top: 2px;">
+                                    <span data-i18n="modality_bill">Remise sur facture d'électricité</span>
+                                </label>
+                            </div>
+                        </div>
+
 
                         <div class="slider-control">
                             <div class="slider-label">
@@ -209,7 +231,7 @@
    
 <script src="translations.js"></script>
 <script src="i18n.js"></script>
-<script src="app.js?v=20"></script>
+<script src="app.js?v=22"></script>
     
 </body>
 

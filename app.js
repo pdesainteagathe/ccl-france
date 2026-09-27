@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         bonusPercent: 0,
         viewByTerritory: false,
         restrictedScope: false,
+        // 'virement' | 'facture_electricite' — n'affecte pas le calcul, seulement le vote et l'export
+        redistributionModality: 'virement',
         subsidies: subsidiesNames.map((name, i) => ({
             id: `sub_${i}`,
             name: name,
@@ -297,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // C. Labels X
             if (!data.isTerritoryView || (i % 3 === 1)) {
                 ctx.fillStyle = '#64748b';
-                ctx.font = '12px Inter';
+                ctx.font = '12px Inter, sans-serif';
                 ctx.textAlign = 'center';
                 const labelX = x + barWidth / 2;
                 const displayText = data.isTerritoryView ? `D${Math.floor(i / 3) + 1}` : label;
@@ -307,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Légende Y
         ctx.fillStyle = '#64748b';
-        ctx.font = '11px Inter';
+        ctx.font = '11px Inter, sans-serif';
         ctx.textAlign = 'right';
         for (let i = minValue; i <= maxValue; i += step) {
             ctx.fillText(i + ' €', padding.left - 10, getY(i) + 4);
@@ -369,6 +371,14 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.classList.add('has-right-sidebar');
             // Désactiver tous les curseurs
             sliders.forEach(slider => slider.disabled = true);
+        }
+
+        // Modalité de versement : sans objet si aucun revenu direct
+        const modalityControl = document.getElementById('modalityControl');
+        if (modalityControl) {
+            const noRevenue = state.redistributionPercent === 0;
+            modalityControl.style.opacity = noRevenue ? '0.4' : '';
+            modalityControl.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = noRevenue);
         }
     };
 
@@ -612,6 +622,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.querySelectorAll('input[name="modalityType"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                state.redistributionModality = e.target.value;
+                updateAll();
+            }
+        });
+    });
+
     // Initialize Subsidies UI
     console.log('[INIT] About to call initSubsidiesUI');
     initSubsidiesUI();
@@ -619,6 +638,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Render
     updateAll();
+
+    // Le canvas ne redessine pas tout seul : sans ce second rendu, les libellés
+    // restent dans la police de repli tant qu'une interaction n'a pas lieu.
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateAll);
+    }
 
     window.addEventListener('resize', () => {
         updateAll();
@@ -671,6 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     redistributionPercent: state.redistributionPercent,
                     ponderationPercent: state.ponderationPercent,
                     bonusPercent: state.bonusPercent,
+                    redistributionModality: state.redistributionPercent > 0 ? state.redistributionModality : '',
                 };
 
                 state.subsidies.forEach((sub, index) => {
@@ -728,6 +754,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const worksheet = XLSX.utils.aoa_to_sheet(rows);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Données Simulation");
+
+            const modalityLabels = { virement: 'Virement automatique', facture_electricite: "Remise sur facture d'électricité" };
+            const paramsSheet = XLSX.utils.aoa_to_sheet([
+                ["Paramètre", "Valeur"],
+                ["Prix carbone (€/tCO2eq)", state.carbonPrice],
+                ["Périmètre", state.restrictedScope ? "Transport routier et logement" : "Toutes émissions"],
+                ["Part revenu direct (%)", state.redistributionPercent],
+                ["Modalité de versement", state.redistributionPercent > 0 ? modalityLabels[state.redistributionModality] : "Sans objet"],
+                ["Bonus bas revenus (%)", state.ponderationPercent],
+                ["Bonus zones rurales (%)", state.bonusPercent],
+            ]);
+            XLSX.utils.book_append_sheet(workbook, paramsSheet, "Paramètres");
 
             // Format filename with current date, time and view type
             const now = new Date();

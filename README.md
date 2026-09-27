@@ -30,20 +30,25 @@ L'objectif est de démocratiser le débat sur la taxe carbone en rendant accessi
    - 100% = Tout est redistribué directement aux ménages
    - 50% = Hybride (moitié direct, moitié subventions)
 
-3. **Bonus faibles revenus** (0-200%)
+3. **Modalité de versement du revenu carbone**
+   - Virement automatique ou remise sur facture d'électricité
+   - Sans effet sur le calcul : le montant reçu par ménage est identique, seule la modalité est enregistrée avec le vote et dans l'export
+   - Grisé quand la part de revenu direct vaut 0%
+
+4. **Bonus faibles revenus** (0-200%)
    - Pondération progressive pour favoriser les déciles bas
    - Basé sur une fonction puissance qui augmente le poids des déciles inférieurs
 
-4. **Bonus zones rurales** (0-100%)
+5. **Bonus zones rurales** (0-100%)
    - Compense la surprime carbone des ménages ruraux (+50% d'émissions moy.)
    - Mécanisme : Transfert global uniformisé depuis les revenus des centres-villes
    - Données : **Pottier et al. (2020)** (découpage Déciles x Ruralité)
 
-5. **Vue par ruralité** (Nouveau ✨)
+6. **Vue par ruralité** (Nouveau ✨)
    - Permet d'éclater le graphique en 30 groupes (10 déciles x 3 territoires)
    - Visualise précisément les transferts entre Rural, Banlieue et Centre
 
-6. **Choix des subventions** (panel de droite)
+7. **Choix des subventions** (panel de droite)
    - 15 catégories de subventions climatiques
    - Ajustement en temps réel pour maintenir 100% de répartition
 
