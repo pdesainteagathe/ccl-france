@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // C. Labels X
             if (!data.isTerritoryView || (i % 3 === 1)) {
                 ctx.fillStyle = '#64748b';
-                ctx.font = '12px Inter';
+                ctx.font = '12px Inter, sans-serif';
                 ctx.textAlign = 'center';
                 const labelX = x + barWidth / 2;
                 const displayText = data.isTerritoryView ? `D${Math.floor(i / 3) + 1}` : label;
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Légende Y
         ctx.fillStyle = '#64748b';
-        ctx.font = '11px Inter';
+        ctx.font = '11px Inter, sans-serif';
         ctx.textAlign = 'right';
         for (let i = minValue; i <= maxValue; i += step) {
             ctx.fillText(i + ' €', padding.left - 10, getY(i) + 4);
@@ -638,6 +638,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Render
     updateAll();
+
+    // Le canvas ne redessine pas tout seul : sans ce second rendu, les libellés
+    // restent dans la police de repli tant qu'une interaction n'a pas lieu.
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateAll);
+    }
 
     window.addEventListener('resize', () => {
         updateAll();
