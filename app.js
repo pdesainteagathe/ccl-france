@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         bonusPercent: 0,
         viewByTerritory: false,
         restrictedScope: false,
+        // 'virement' | 'facture_electricite' — n'affecte pas le calcul, seulement le vote et l'export
+        redistributionModality: 'virement',
         subsidies: subsidiesNames.map((name, i) => ({
             id: `sub_${i}`,
             name: name,
@@ -370,6 +372,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Désactiver tous les curseurs
             sliders.forEach(slider => slider.disabled = true);
         }
+
+        // Modalité de versement : sans objet si aucun revenu direct
+        const modalityControl = document.getElementById('modalityControl');
+        if (modalityControl) {
+            const noRevenue = state.redistributionPercent === 0;
+            modalityControl.style.opacity = noRevenue ? '0.4' : '';
+            modalityControl.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = noRevenue);
+        }
     };
 
     // ===== SLIDERS SETUP =====
@@ -612,6 +622,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.querySelectorAll('input[name="modalityType"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                state.redistributionModality = e.target.value;
+                updateAll();
+            }
+        });
+    });
+
     // Initialize Subsidies UI
     console.log('[INIT] About to call initSubsidiesUI');
     initSubsidiesUI();
@@ -671,6 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     redistributionPercent: state.redistributionPercent,
                     ponderationPercent: state.ponderationPercent,
                     bonusPercent: state.bonusPercent,
+                    redistributionModality: state.redistributionPercent > 0 ? state.redistributionModality : '',
                 };
 
                 state.subsidies.forEach((sub, index) => {
@@ -728,6 +748,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const worksheet = XLSX.utils.aoa_to_sheet(rows);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Données Simulation");
+
+            const modalityLabels = { virement: 'Virement automatique', facture_electricite: "Remise sur facture d'électricité" };
+            const paramsSheet = XLSX.utils.aoa_to_sheet([
+                ["Paramètre", "Valeur"],
+                ["Prix carbone (€/tCO2eq)", state.carbonPrice],
+                ["Périmètre", state.restrictedScope ? "Transport routier et logement" : "Toutes émissions"],
+                ["Part revenu direct (%)", state.redistributionPercent],
+                ["Modalité de versement", state.redistributionPercent > 0 ? modalityLabels[state.redistributionModality] : "Sans objet"],
+                ["Bonus bas revenus (%)", state.ponderationPercent],
+                ["Bonus zones rurales (%)", state.bonusPercent],
+            ]);
+            XLSX.utils.book_append_sheet(workbook, paramsSheet, "Paramètres");
 
             // Format filename with current date, time and view type
             const now = new Date();

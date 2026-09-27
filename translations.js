@@ -31,6 +31,12 @@ const translations = {
     sub_prefix: "Sub.",
     rev_prefix: "Revenu",
 
+    // Redistribution modality
+    modality_label: "Versement du revenu carbone",
+    modality_transfer: "Virement automatique",
+    modality_bill: "Remise sur facture d'électricité",
+    modality_tooltip: "Le revenu carbone peut être versé par virement automatique sur le compte bancaire de chaque ménage, ou déduit de sa facture d'électricité. Dans ce simulateur, le montant reçu est le même dans les deux cas : seule la modalité de versement change.",
+
     // Vote button
     vote_main: "Je vote",
     vote_sub: "pour cette redistribution",
@@ -94,6 +100,12 @@ const translations = {
     sub_prefix: "Sub.",
     rev_prefix: "Income",
 
+    // Redistribution modality
+    modality_label: "Carbon dividend payment",
+    modality_transfer: "Automatic bank transfer",
+    modality_bill: "Electricity bill rebate",
+    modality_tooltip: "The carbon dividend can be paid by automatic transfer to each household's bank account, or deducted from its electricity bill. In this simulator, the amount received is the same in both cases: only the payment method changes.",
+
     // Vote button
     vote_main: "I vote",
     vote_sub: "for this redistribution",
@@ -155,6 +167,12 @@ const translations = {
     // Slider percentage prefixes (used by app.js)
     sub_prefix: "Sub.",
     rev_prefix: "Eink.",
+
+    // Redistribution modality
+    modality_label: "Auszahlung der Kohlenstoffdividende",
+    modality_transfer: "Automatische Überweisung",
+    modality_bill: "Gutschrift auf der Stromrechnung",
+    modality_tooltip: "Die Kohlenstoffdividende kann per automatischer Überweisung auf das Bankkonto jedes Haushalts ausgezahlt oder von seiner Stromrechnung abgezogen werden. In diesem Simulator ist der erhaltene Betrag in beiden Fällen gleich: Nur die Art der Auszahlung ändert sich.",
  
     // Vote button
     vote_main: "Ich stimme",
